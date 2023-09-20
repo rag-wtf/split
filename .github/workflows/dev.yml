@@ -19,6 +19,12 @@ on:
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+
     steps:
       - uses: actions/checkout@v3
 
@@ -53,3 +59,19 @@ jobs:
 
       - name: Test Lambda functions
         run: "curl -X POST -H 'Content-Type: application/json' -d @test.json $(cat endpoint)upload"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir -r requirements.txt
+
+      - name: Create deploy-requirements.txt
+        run: pip freeze > deploy-requirements.txt
+
+      - name: Commit and push deploy-requirements.txt
+        uses: stefanzweifel/git-auto-commit-action@v4.16.0
+        with:
+          commit_message: "chore: updated deploy-requirements.txt"
