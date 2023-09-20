@@ -1,5 +1,0 @@
-fastapi
-langchain
-mangum
-python-multipart
-starlette_validation_uploadfile

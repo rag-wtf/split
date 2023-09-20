@@ -6,14 +6,15 @@
     },
     "provider": {
       "name": "aws",
-      "runtime": "python3.11",
+      "ecr": {
+        "images": {
+          "appimage": {
+            "path": "./"
+          }
+        }
+      },
       "stage": "dev",
       "region": "us-east-1",
-      "memorySize": 128,
-      "environment": {
-        "RUNTIME": "aws-lambda"
-      },
-      "timeout": 900,
       "iam": {
         "role": {
           "statements": [
@@ -192,19 +193,18 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
               "Code": {
-                "S3Bucket": {
-                  "Ref": "ServerlessDeploymentBucket"
-                },
-                "S3Key": "serverless/load-split-embed/dev/1695192699679-2023-09-20T06:51:39.679Z/load-split-embed.zip"
+                "ImageUri": "703930590955.dkr.ecr.us-east-1.amazonaws.com/serverless-load-split-embed-dev@sha256:0dfccf884b023a475100c07408a5683fbdbc53ba4b6403b4b92367ccfd755889"
               },
-              "Handler": "load_split_embed.handler",
-              "Runtime": "python3.11",
+              "PackageType": "Image",
               "FunctionName": "load-split-embed-dev-lse",
               "MemorySize": 128,
               "Timeout": 900,
               "Environment": {
                 "Variables": {
-                  "RUNTIME": "aws-lambda"
+                  "EMBEDDING_MODEL_URL": "https://limcheekin-bge-large-en.hf.space/v1",
+                  "EMBEDDING_MODEL_KEY": "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",
+                  "CHUNK_SIZE": "500",
+                  "CHUNK_OVERLAP": "20"
                 }
               },
               "Role": {
@@ -218,14 +218,14 @@
               "LseLogGroup"
             ]
           },
-          "LseLambdaVersionVu2j9vsLqzPEABmNt0D9nwGw2mfUUz7OnsWb6THOqAs": {
+          "LseLambdaVersionVmod1O3FgBVhPJnvh0dMm5zpHBljlDp5b2ckJRbA": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "LseLambdaFunction"
               },
-              "CodeSha256": "1itngkgA2syIqjf0eOqFcig2zQtCmdjQKLQRWU0QFKM="
+              "CodeSha256": "0dfccf884b023a475100c07408a5683fbdbc53ba4b6403b4b92367ccfd755889"
             }
           },
           "LseLambdaFunctionUrl": {
@@ -264,7 +264,7 @@
           "LseLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "LseLambdaVersionVu2j9vsLqzPEABmNt0D9nwGw2mfUUz7OnsWb6THOqAs"
+              "Ref": "LseLambdaVersionVmod1O3FgBVhPJnvh0dMm5zpHBljlDp5b2ckJRbA"
             },
             "Export": {
               "Name": "sls-load-split-embed-dev-LseLambdaFunctionQualifiedArn"
@@ -368,28 +368,27 @@
       },
       "vpc": {}
     },
-    "custom": {
-      "pythonRequirements": {
-        "dockerizePip": true,
-        "slim": true
-      }
-    },
-    "plugins": [
-      "serverless-python-requirements"
-    ],
     "pluginsData": {},
     "functions": {
       "lse": {
-        "handler": "load_split_embed.handler",
+        "image": {
+          "name": "appimage"
+        },
+        "memorySize": 128,
+        "environment": {
+          "EMBEDDING_MODEL_URL": "https://limcheekin-bge-large-en.hf.space/v1",
+          "EMBEDDING_MODEL_KEY": "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",
+          "CHUNK_SIZE": "500",
+          "CHUNK_OVERLAP": "20"
+        },
+        "timeout": 900,
         "url": true,
         "events": [],
         "name": "load-split-embed-dev-lse",
         "package": {},
         "memory": 128,
-        "timeout": 900,
-        "runtime": "python3.11",
         "vpc": {},
-        "versionLogicalId": "LseLambdaVersionVu2j9vsLqzPEABmNt0D9nwGw2mfUUz7OnsWb6THOqAs"
+        "versionLogicalId": "LseLambdaVersionVmod1O3FgBVhPJnvh0dMm5zpHBljlDp5b2ckJRbA"
       }
     },
     "configValidationMode": "warn",
@@ -400,38 +399,15 @@
       "provider": {
         "$ref": "$[\"service\"][\"provider\"]"
       },
-      "package": {
-        "exclude": [
-          ".npmignore",
-          ".vscode/**",
-          ".github/**",
-          "(*).json",
-          "(*).ipynb",
-          "node_modules/**",
-          "venv/**",
-          "LICENSE",
-          "test/**"
-        ],
-        "artifactsS3KeyDirname": "serverless/load-split-embed/dev/code-artifacts",
-        "artifact": "/home/runner/work/load-split-embed/load-split-embed/.serverless/load-split-embed.zip",
-        "artifactDirectoryName": "serverless/load-split-embed/dev/1695192699679-2023-09-20T06:51:39.679Z"
-      },
-      "plugins": {
-        "$ref": "$[\"service\"][\"plugins\"]"
-      },
-      "custom": {
-        "$ref": "$[\"service\"][\"custom\"]"
-      },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
       }
     },
     "layers": {},
-    "isDashboardMonitoringPreconfigured": false,
-    "artifact": "/home/runner/work/load-split-embed/load-split-embed/.serverless/load-split-embed.zip"
+    "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/load-split-embed/dev/1695192699679-2023-09-20T06:51:39.679Z",
-    "artifact": "load-split-embed.zip"
+    "artifactDirectoryName": "serverless/load-split-embed/dev/1695199759359-2023-09-20T08:49:19.359Z",
+    "artifact": ""
   }
 }
