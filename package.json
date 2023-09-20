@@ -1,0 +1,23 @@
+{
+  "name": "serverless-file-upload",
+  "description": "File Upload API hosted as AWS Lambda",
+  "version": "0.1.0",
+  "main": "file_upload.py",
+  "keywords": [
+    "file-upload",
+    "aws-lambda",
+    "serverless-framework"
+  ],
+  "author": "Lim Chee Kin",
+  "devDependencies": {
+    "serverless-python-requirements": "^6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/limcheekin/serverless-file-upload"
+  },
+  "bugs": {
+    "url": "https://github.com/limcheekin/serverless-file-upload/issues"
+  },
+  "homepage": "https://github.com/limcheekin/serverless-file-upload#readme"
+}

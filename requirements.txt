@@ -1,0 +1,10 @@
+fastapi
+python-multipart
+starlette_validation_uploadfile
+langchain
+# for aws lambda
+mangum
+# for local / self-host
+# uvicorn
+# for testclient
+# httpx
