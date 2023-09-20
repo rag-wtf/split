@@ -4,13 +4,14 @@ frameworkVersion: "3"
 
 provider:
   name: aws
-  runtime: python3.11
-  stage: dev
+  # REF: https://www.serverless.com/blog/container-support-for-lambda
+  ecr:
+    # In this section you can define images that will be built locally and uploaded to ECR
+    images:
+      appimage:
+        path: ./
+  stage: ${env:STAGE, 'dev'}
   region: us-east-1
-  memorySize: 128
-  environment:
-    RUNTIME: aws-lambda
-  timeout: 900
   iam:
     role:
       statements:
@@ -19,28 +20,17 @@ provider:
             - "lambda:InvokeFunction"
           Resource: "*"
 
-package:
-  exclude:
-    - .npmignore
-    - .vscode/**
-    - .github/**
-    - (*).json
-    - (*).ipynb
-    - node_modules/**
-    - venv/**
-    - LICENSE
-    - test/**
-
-plugins:
-  - serverless-python-requirements
-
-custom:
-  pythonRequirements:
-    dockerizePip: true
-    slim: true
-
 functions:
   lse:
-    handler: load_split_embed.handler
-    # https://www.serverless.com/framework/docs/providers/aws/guide/functions#lambda-function-urls
+    image:
+      name: appimage
+    memorySize: 128
+    environment:
+      EMBEDDING_MODEL_URL: ${env:EMBEDDING_MODEL_URL}
+      EMBEDDING_MODEL_KEY: ${env:EMBEDDING_MODEL_KEY}
+      CHUNK_SIZE: 500
+      CHUNK_OVERLAP: 20
+    timeout:
+      900
+      # https://www.serverless.com/framework/docs/providers/aws/guide/functions#lambda-function-urls
     url: true
