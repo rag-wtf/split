@@ -1,10 +1,12 @@
 {
-  "name": "serverless-file-upload",
-  "description": "File Upload API hosted as AWS Lambda",
+  "name": "load-split-embed",
+  "description": "Load, Split and Embed (LSE) endpoint",
   "version": "0.1.0",
-  "main": "file_upload.py",
+  "main": "load_split_embed.py",
   "keywords": [
-    "file-upload",
+    "load",
+    "split",
+    "embed",
     "aws-lambda",
     "serverless-framework"
   ],
@@ -14,10 +16,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/limcheekin/serverless-file-upload"
+    "url": "git+https://github.com/limcheekin/load-split-embed"
   },
   "bugs": {
-    "url": "https://github.com/limcheekin/serverless-file-upload/issues"
+    "url": "https://github.com/limcheekin/load-split-embed/issues"
   },
-  "homepage": "https://github.com/limcheekin/serverless-file-upload#readme"
+  "homepage": "https://github.com/limcheekin/load-split-embed#readme"
 }

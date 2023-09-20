@@ -2,6 +2,9 @@ fastapi
 python-multipart
 starlette_validation_uploadfile
 langchain
+openai
+unstructured[all-docs]
+
 # for aws lambda
 mangum
 # for local / self-host

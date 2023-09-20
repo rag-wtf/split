@@ -60,6 +60,9 @@ jobs:
       - name: Test Lambda functions
         run: "curl -X POST -H 'Content-Type: application/json' -d @test.json $(cat endpoint)upload"
 
+      - name: Remove Endpoint file
+        run: rm endpoint
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
