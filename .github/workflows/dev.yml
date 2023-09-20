@@ -45,5 +45,11 @@ jobs:
       - name: Deploy Lambda functions
         run: sls deploy
 
+      - name: Export Endpoint URL
+        run: echo $(sls info --verbose | grep endpoint | sed s/endpoint\:\ //g | awk '{print $1}') > endpoint
+
+      - name: Echo Endpoint URL
+        run: echo $(cat endpoint)
+
       - name: Test Lambda functions
-        run: sls invoke --function lse --path "$(pwd)/test.json"
+        run: "curl -X POST -H 'Content-Type: application/json' -d @test.json $(cat endpoint)"
