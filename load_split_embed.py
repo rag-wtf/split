@@ -20,15 +20,8 @@ app.add_middleware(
 app.add_middleware(
     ValidateUploadFileMiddleware,
     app_path="/upload",
-    max_size=1048576,  # 1 MB
-    file_type=["text/plain",
-               "image/jpeg",
-               "image/png",
-               "video/mp4",
-               "video/webm",
-               "application/json",
-               "application/pdf",
-               ]
+    max_size=os.getenv("MAX_FILE_SIZE_IN_MB") * 1048576,  # 1 MB
+    file_type=os.getenv("SUPPORTED_FILE_TYPES").split(",")
 )
 
 
