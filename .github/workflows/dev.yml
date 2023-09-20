@@ -19,6 +19,9 @@ on:
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
+    env:
+      EMBEDDING_MODEL_URL: ${{ secrets.EMBEDDING_MODEL_URL }}
+      EMBEDDING_MODEL_KEY: ${{ secrets.EMBEDDING_MODEL_KEY }}
 
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
@@ -49,10 +52,7 @@ jobs:
         run: npm install
 
       - name: Deploy Lambda functions
-        run: |
-          export EMBEDDING_MODEL_URL=${{ secrets.EMBEDDING_MODEL_URL }}
-          export EMBEDDING_MODEL_KEY=${{ secrets.EMBEDDING_MODEL_KEY }}
-          sls deploy
+        run: sls deploy
 
       - name: Export Endpoint URL
         run: echo $(sls info --verbose | grep endpoint | sed s/endpoint\:\ //g | awk '{print $1}') > endpoint
@@ -62,9 +62,6 @@ jobs:
 
       - name: Test Lambda functions
         run: "curl -X POST -H 'Content-Type: application/json' -d @test.json $(cat endpoint)upload"
-
-      - name: Remove Endpoint file
-        run: rm endpoint
 
       - name: Setup Python
         uses: actions/setup-python@v4
