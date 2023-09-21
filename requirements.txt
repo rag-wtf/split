@@ -10,4 +10,5 @@ mangum
 # for local / self-host
 # uvicorn
 # for testclient
-# httpx
+#httpx
+#python-dotenv
