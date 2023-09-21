@@ -61,7 +61,7 @@ jobs:
         run: echo $(cat endpoint)
 
       - name: Test Lambda functions
-        run: "curl -X POST -H 'Content-Type: text/plain' -d @breathing.txt $(cat endpoint)load_split_embed"
+        run: "curl -X POST -H 'Content-Type: multipart/form-data' -F 'file=@breathing.txt' $(cat endpoint)load_split_embed"
 
       - name: Setup Python
         uses: actions/setup-python@v4
