@@ -33,6 +33,7 @@ functions:
       CHUNK_OVERLAP: 20
       SUPPORTED_FILE_TYPES: text/plain,application/pdf,text/html,text/markdown,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,message/rfc82234
       MAX_FILE_SIZE_IN_MB: 1
+      NLTK_DATA: /tmp/nltk_data
     timeout:
       900
       # https://www.serverless.com/framework/docs/providers/aws/guide/functions#lambda-function-urls
