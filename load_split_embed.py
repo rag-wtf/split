@@ -10,6 +10,10 @@ from typing import List
 import tempfile
 import os
 import hashlib
+import nltk
+
+# Set the nltk.data.path with environment variable
+nltk.data.path.append(os.getenv("NLTK_DATA"))
 
 router = APIRouter()
 
