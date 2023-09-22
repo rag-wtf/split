@@ -83,7 +83,7 @@ class LoadSplitEmbedResponse(BaseModel):
     embedding: List[float]
 
 
-@router.post("/load_split_embed")
+@router.post("/ingest")
 async def load_split_embed(file: UploadFile = File(...)):
     chunk_size = 1024 * 1024  # 1 MB
 

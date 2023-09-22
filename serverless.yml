@@ -21,7 +21,7 @@ provider:
           Resource: "*"
 
 functions:
-  lse:
+  ingest:
     image:
       name: appimage
     memorySize: 512

@@ -8,7 +8,7 @@ def test():
 
     client = TestClient(create_app())
     with open("breathing.txt", "rb") as file:
-        response = client.post("/load_split_embed", files={"file": file})
+        response = client.post("/ingest", files={"file": file})
     print(response.content)
 
 
