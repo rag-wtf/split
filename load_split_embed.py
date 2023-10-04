@@ -6,7 +6,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import BaseModel
 from open.text.embeddings.openai import OpenAIEmbeddings
-from typing import List
+from typing import List, Mapping, Any
 import tempfile
 import os
 import hashlib
@@ -78,9 +78,9 @@ def embed(texts):
 
 
 class LoadSplitEmbedResponse(BaseModel):
-    id: str
-    text: str
+    content: str
     embedding: List[float]
+    metadata: Mapping[str, Any]
 
 
 @router.post("/ingest")
@@ -110,9 +110,9 @@ async def load_split_embed(file: UploadFile = File(...)):
         for i, text in enumerate(texts):
             responses.append(
                 LoadSplitEmbedResponse(
-                    id=f'{id}-{i}',
-                    text=text,
-                    embedding=embeddings[i]
+                    content=text,
+                    embedding=embeddings[i],
+                    metadata={'id': f'{id}-{i}'},
                 )
             )
         return responses
