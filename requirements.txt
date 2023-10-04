@@ -1,7 +1,6 @@
-fastapi
+open-text-embeddings
 python-multipart
 starlette_validation_uploadfile
-langchain
 openai
 unstructured[all-docs]
 
