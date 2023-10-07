@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, File, UploadFile
+from fastapi import FastAPI, APIRouter, File, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from starlette_validation_uploadfile import ValidateUploadFileMiddleware
 from langchain.document_loaders import UnstructuredFileLoader
@@ -12,6 +12,8 @@ import os
 import hashlib
 import nltk
 import gzip
+import io
+import json
 
 # Set the nltk.data.path with environment variable
 nltk.data.path.append(os.getenv("NLTK_DATA"))
@@ -47,7 +49,8 @@ def is_gz_file(file_path):
         return f.read(2) == b'\x1f\x8b'
 
 
-def decompress(file):
+def load(file):
+    # REF: https://python.langchain.com/docs/integrations/document_loaders/unstructured_file
     if is_gz_file(file.name):
         print(f'The {file.name} is gzip compressed.')
         with gzip.open(file.name, 'rb') as gzipped_file:
@@ -56,17 +59,17 @@ def decompress(file):
                     delete=os.getenv("DELETE", True)) as decompressed_file:
                 for chunk in gzipped_file:
                     decompressed_file.write(chunk)
-            return decompressed_file
+                decompressed_file.flush()
+                loader = UnstructuredFileLoader(
+                    file_path=decompressed_file.name,
+                    post_processors=[clean_extra_whitespace],
+                )
     else:
-        return file
+        loader = UnstructuredFileLoader(
+            file_path=file.name,
+            post_processors=[clean_extra_whitespace],
+        )
 
-
-def load(file):
-    # REF: https://python.langchain.com/docs/integrations/document_loaders/unstructured_file
-    loader = UnstructuredFileLoader(
-        file_path=file.name,
-        post_processors=[clean_extra_whitespace],
-    )
     return loader.load()
 
 
@@ -104,6 +107,19 @@ class LoadSplitEmbedResponse(BaseModel):
     metadata: Mapping[str, Any]
 
 
+async def gz_response(data: str):
+    # Compress the data using gzip
+    compressed_data = io.BytesIO()
+    with gzip.GzipFile(fileobj=compressed_data, mode="wb") as gzipped_file:
+        gzipped_file.write(data.encode())
+
+    # Create a response with the compressed data
+    response = Response(content=compressed_data.getvalue())
+    response.headers["Content-Encoding"] = "gzip"
+
+    return response
+
+
 @router.post("/ingest")
 async def load_split_embed(file: UploadFile = File(...)):
     chunk_size = 1024 * 1024  # 1 MB
@@ -118,8 +134,7 @@ async def load_split_embed(file: UploadFile = File(...)):
                 break
             temp.write(chunk)
         temp.flush()
-        decompressed_file = decompress(temp)
-        docs = load(decompressed_file)
+        docs = load(temp)
         doc = docs[0]
         texts = split(doc)
         print(len(texts))
@@ -138,6 +153,7 @@ async def load_split_embed(file: UploadFile = File(...)):
                 )
             )
         return responses
+        # return gz_response(json.dumps(responses))
 
 
 if __name__ == "__main__":
