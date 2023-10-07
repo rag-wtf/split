@@ -117,6 +117,7 @@ async def load_split_embed(file: UploadFile = File(...)):
             if not chunk:
                 break
             temp.write(chunk)
+        temp.flush()
         decompressed_file = decompress(temp)
         docs = load(decompressed_file)
         doc = docs[0]
