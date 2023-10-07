@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, File, Response, UploadFile
+from fastapi import FastAPI, APIRouter, File, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from starlette_validation_uploadfile import ValidateUploadFileMiddleware
 from langchain.document_loaders import UnstructuredFileLoader
@@ -14,6 +14,9 @@ import nltk
 import gzip
 import io
 import json
+
+delete_temp_file = bool(os.getenv("DELETE_TEMP_FILE", ""))
+print(f"delete_temp_file {delete_temp_file}")
 
 # Set the nltk.data.path with environment variable
 nltk.data.path.append(os.getenv("NLTK_DATA"))
@@ -56,7 +59,7 @@ def load(file):
         with gzip.open(file.name, 'rb') as gzipped_file:
             with tempfile.NamedTemporaryFile(
                     mode='wb',
-                    delete=os.getenv("DELETE", True)) as decompressed_file:
+                    delete=delete_temp_file) as decompressed_file:
                 for chunk in gzipped_file:
                     decompressed_file.write(chunk)
                 decompressed_file.flush()
@@ -64,13 +67,13 @@ def load(file):
                     file_path=decompressed_file.name,
                     post_processors=[clean_extra_whitespace],
                 )
+                return loader.load()
     else:
         loader = UnstructuredFileLoader(
             file_path=file.name,
             post_processors=[clean_extra_whitespace],
         )
-
-    return loader.load()
+        return loader.load()
 
 
 md5 = hashlib.md5()
@@ -107,7 +110,8 @@ class LoadSplitEmbedResponse(BaseModel):
     metadata: Mapping[str, Any]
 
 
-async def gz_response(data: str):
+def gz_response(data: str):
+    print("gz_response()")
     # Compress the data using gzip
     compressed_data = io.BytesIO()
     with gzip.GzipFile(fileobj=compressed_data, mode="wb") as gzipped_file:
@@ -121,13 +125,13 @@ async def gz_response(data: str):
 
 
 @router.post("/ingest")
-async def load_split_embed(file: UploadFile = File(...)):
+async def load_split_embed(request: Request, file: UploadFile = File(...)):
     chunk_size = 1024 * 1024  # 1 MB
 
     with tempfile.NamedTemporaryFile(
             mode='wb',
             buffering=chunk_size,
-            delete=os.getenv("DELETE", True)) as temp:
+            delete=delete_temp_file) as temp:
         while True:
             chunk = await file.read(chunk_size)
             if not chunk:
@@ -144,16 +148,27 @@ async def load_split_embed(file: UploadFile = File(...)):
         print(embeddings[0])
         id = get_doc_id(doc)
         responses = []
-        for i, text in enumerate(texts):
-            responses.append(
-                LoadSplitEmbedResponse(
-                    content=text,
-                    embedding=embeddings[i],
-                    metadata={'id': f'{id}-{i}'},
+        if "gzip" in request.headers.getlist("Content-Encoding"):
+            for i, text in enumerate(texts):
+                responses.append(
+                    {
+                        "id": "_",
+                        "content": text,
+                        "embedding": embeddings[i],
+                        "metadata": {'id': f'{id}-{i}'},
+                    }
                 )
-            )
-        return responses
-        # return gz_response(json.dumps(responses))
+            return gz_response(json.dumps(responses))
+        else:
+            for i, text in enumerate(texts):
+                responses.append(
+                    LoadSplitEmbedResponse(
+                        content=text,
+                        embedding=embeddings[i],
+                        metadata={'id': f'{id}-{i}'},
+                    )
+                )
+            return responses
 
 
 if __name__ == "__main__":

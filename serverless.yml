@@ -34,6 +34,7 @@ functions:
       SUPPORTED_FILE_TYPES: text/plain,application/pdf,text/html,text/markdown,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,message/rfc822,application/gzip
       MAX_FILE_SIZE_IN_MB: 10
       NLTK_DATA: /tmp
+      DELETE_TEMP_FILE: 1
     timeout:
       900
       # https://www.serverless.com/framework/docs/providers/aws/guide/functions#lambda-function-urls
