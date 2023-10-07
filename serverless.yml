@@ -31,7 +31,7 @@ functions:
       EMBEDDING_MODEL_KEY: ${env:EMBEDDING_MODEL_KEY}
       CHUNK_SIZE: 500
       CHUNK_OVERLAP: 20
-      SUPPORTED_FILE_TYPES: text/plain,application/pdf,text/html,text/markdown,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,message/rfc822
+      SUPPORTED_FILE_TYPES: text/plain,application/pdf,text/html,text/markdown,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,message/rfc822,application/gzip
       MAX_FILE_SIZE_IN_MB: 10
       NLTK_DATA: /tmp
     timeout:

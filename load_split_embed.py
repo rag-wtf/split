@@ -11,6 +11,7 @@ import tempfile
 import os
 import hashlib
 import nltk
+import gzip
 
 # Set the nltk.data.path with environment variable
 nltk.data.path.append(os.getenv("NLTK_DATA"))
@@ -39,6 +40,25 @@ def create_app():
     app.include_router(router)
 
     return app
+
+
+def is_gz_file(file_path):
+    with open(file_path, 'rb') as f:
+        return f.read(2) == b'\x1f\x8b'
+
+
+def decompress(file):
+    if is_gz_file(file.name):
+        print(f'The {file.name} is gzip compressed.')
+        with gzip.open(file.name, 'rb') as gzipped_file:
+            with tempfile.NamedTemporaryFile(
+                    mode='wb',
+                    delete=os.getenv("DELETE", True)) as decompressed_file:
+                for chunk in gzipped_file:
+                    decompressed_file.write(chunk)
+            return decompressed_file
+    else:
+        return file
 
 
 def load(file):
@@ -97,8 +117,8 @@ async def load_split_embed(file: UploadFile = File(...)):
             if not chunk:
                 break
             temp.write(chunk)
-        temp.flush()
-        docs = load(temp)
+        decompressed_file = decompress(temp)
+        docs = load(decompressed_file)
         doc = docs[0]
         texts = split(doc)
         print(len(texts))
