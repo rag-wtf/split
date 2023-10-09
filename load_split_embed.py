@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, File, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from starlette_validation_uploadfile import ValidateUploadFileMiddleware
 from langchain.document_loaders import UnstructuredFileLoader
 from unstructured.cleaners.core import clean_extra_whitespace
@@ -12,8 +13,6 @@ import os
 import hashlib
 import nltk
 import gzip
-import io
-import json
 
 delete_temp_file = bool(os.getenv("DELETE_TEMP_FILE", ""))
 print(f"delete_temp_file {delete_temp_file}")
@@ -41,6 +40,8 @@ def create_app():
         max_size=int(os.getenv("MAX_FILE_SIZE_IN_MB")) * 1048576,  # 1 MB
         # file_type=os.getenv("SUPPORTED_FILE_TYPES").split(",")
     )
+
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     app.include_router(router)
 
@@ -110,22 +111,8 @@ class LoadSplitEmbedResponse(BaseModel):
     metadata: Mapping[str, Any]
 
 
-def gz_response(data: str):
-    print("gz_response()")
-    # Compress the data using gzip
-    compressed_data = io.BytesIO()
-    with gzip.GzipFile(fileobj=compressed_data, mode="wb") as gzipped_file:
-        gzipped_file.write(data.encode())
-
-    # Create a response with the compressed data
-    response = Response(content=compressed_data.getvalue())
-    response.headers["Content-Encoding"] = "gzip"
-
-    return response
-
-
 @router.post("/ingest")
-async def load_split_embed(request: Request, file: UploadFile = File(...)):
+async def load_split_embed(request: Request, response: Response, file: UploadFile = File(...)):
     chunk_size = 1024 * 1024  # 1 MB
 
     with tempfile.NamedTemporaryFile(
@@ -148,32 +135,15 @@ async def load_split_embed(request: Request, file: UploadFile = File(...)):
         print(embeddings[0])
         id = get_doc_id(doc)
         responses = []
-        print(f"request.headers {request.headers}")
-        accept_encoding = request.headers.getlist("Accept-Encoding")
-        content_encoding = request.headers.getlist("Content-Encoding")
-        print(f"accept_encoding {accept_encoding}")
-        print(f"content_encoding {content_encoding}")
-        if "gzip" in accept_encoding or "gzip" in content_encoding:
-            for i, text in enumerate(texts):
-                responses.append(
-                    {
-                        "id": "_",
-                        "content": text,
-                        "embedding": embeddings[i],
-                        "metadata": {'id': f'{id}-{i}'},
-                    }
+        for i, text in enumerate(texts):
+            responses.append(
+                LoadSplitEmbedResponse(
+                    content=text,
+                    embedding=embeddings[i],
+                    metadata={'id': f'{id}-{i}'},
                 )
-            return gz_response(json.dumps(responses))
-        else:
-            for i, text in enumerate(texts):
-                responses.append(
-                    LoadSplitEmbedResponse(
-                        content=text,
-                        embedding=embeddings[i],
-                        metadata={'id': f'{id}-{i}'},
-                    )
-                )
-            return responses
+            )
+        return responses
 
 
 if __name__ == "__main__":
