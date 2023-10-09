@@ -148,7 +148,7 @@ async def load_split_embed(request: Request, file: UploadFile = File(...)):
         print(embeddings[0])
         id = get_doc_id(doc)
         responses = []
-        if "gzip" in request.headers.getlist("Content-Encoding"):
+        if "gzip" in request.headers.getlist("Accept-Encoding"):
             for i, text in enumerate(texts):
                 responses.append(
                     {
