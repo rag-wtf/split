@@ -37,9 +37,9 @@ def create_app():
 
     app.add_middleware(
         ValidateUploadFileMiddleware,
-        app_path="/load_split_embed",
+        app_path="/ingest",
         max_size=int(os.getenv("MAX_FILE_SIZE_IN_MB")) * 1048576,  # 1 MB
-        file_type=os.getenv("SUPPORTED_FILE_TYPES").split(",")
+        # file_type=os.getenv("SUPPORTED_FILE_TYPES").split(",")
     )
 
     app.include_router(router)
@@ -148,7 +148,12 @@ async def load_split_embed(request: Request, file: UploadFile = File(...)):
         print(embeddings[0])
         id = get_doc_id(doc)
         responses = []
-        if "gzip" in request.headers.getlist("Accept-Encoding"):
+        print(f"request.headers {request.headers}")
+        accept_encoding = request.headers.getlist("Accept-Encoding")
+        content_encoding = request.headers.getlist("Content-Encoding")
+        print(f"accept_encoding {accept_encoding}")
+        print(f"content_encoding {content_encoding}")
+        if "gzip" in accept_encoding or "gzip" in content_encoding:
             for i, text in enumerate(texts):
                 responses.append(
                     {
