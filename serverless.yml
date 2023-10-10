@@ -36,6 +36,8 @@ functions:
       MAX_FILE_SIZE_IN_MB: 10
       NLTK_DATA: /tmp
       DELETE_TEMP_FILE: 1
+      MODEL: ${env:MODEL}
+      TRANSFORMERS_CACHE: /tmp/transformer_cache
     timeout:
       900
       # https://www.serverless.com/framework/docs/providers/aws/guide/functions#lambda-function-urls
