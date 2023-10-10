@@ -1,5 +1,5 @@
 fastapi
-open-text-embeddings
+langchain
 python-multipart
 starlette_validation_uploadfile
 openai

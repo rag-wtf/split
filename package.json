@@ -1,12 +1,12 @@
 {
-  "name": "load-split-embed",
-  "description": "Load, Split and Embed (LSE) endpoint",
+  "name": "load-split-count",
+  "description": "Load, Split and Count (LSC) endpoint",
   "version": "0.1.0",
-  "main": "load_split_embed.py",
+  "main": "ingest.py",
   "keywords": [
     "load",
     "split",
-    "embed",
+    "count",
     "aws-lambda",
     "serverless-framework"
   ],
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/limcheekin/load-split-embed"
+    "url": "git+https://github.com/limcheekin/load-split-count"
   },
   "bugs": {
     "url": "https://github.com/limcheekin/load-split-embed/issues"

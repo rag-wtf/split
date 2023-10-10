@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, File, Request, Response, UploadFile
+from fastapi import FastAPI, APIRouter, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette_validation_uploadfile import ValidateUploadFileMiddleware
@@ -6,7 +6,6 @@ from langchain.document_loaders import UnstructuredFileLoader
 from unstructured.cleaners.core import clean_extra_whitespace
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import BaseModel
-from open.text.embeddings.openai import OpenAIEmbeddings
 from typing import List, Mapping, Any
 import tempfile
 import os
@@ -95,24 +94,14 @@ def split(doc):
     return chunks
 
 
-def embed(texts):
-    embeddings = OpenAIEmbeddings(
-        openai_api_key=os.getenv("EMBEDDING_MODEL_KEY"),
-        openai_api_base=os.getenv("EMBEDDING_MODEL_URL")
-    )
-    results = embeddings.embed_documents(texts)
-    return results
-
-
 class LoadSplitEmbedResponse(BaseModel):
     id: str = "_"
     content: str
-    embedding: List[float]
     metadata: Mapping[str, Any]
 
 
 @router.post("/ingest")
-async def load_split_embed(request: Request, response: Response, file: UploadFile = File(...)):
+async def load_split_embed(file: UploadFile = File(...)):
     chunk_size = 1024 * 1024  # 1 MB
 
     with tempfile.NamedTemporaryFile(
@@ -130,16 +119,12 @@ async def load_split_embed(request: Request, response: Response, file: UploadFil
         texts = split(doc)
         print(len(texts))
         print(texts[1])
-        embeddings = embed(texts)
-        print(len(embeddings))
-        print(embeddings[0])
         id = get_doc_id(doc)
         responses = []
         for i, text in enumerate(texts):
             responses.append(
                 LoadSplitEmbedResponse(
                     content=text,
-                    embedding=embeddings[i],
                     metadata={'id': f'{id}-{i}'},
                 )
             )

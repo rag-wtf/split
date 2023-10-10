@@ -1,8 +1,8 @@
 FROM public.ecr.aws/lambda/python:3.11
 
-COPY load_split_embed.py ./
+COPY ingest.py ./
 COPY requirements.txt ./
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["load_split_embed.handler"]
+CMD ["ingest.handler"]

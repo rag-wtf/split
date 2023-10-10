@@ -1,5 +1,5 @@
 import os
-from load_split_embed import create_app
+from ingest import create_app
 from dotenv import load_dotenv
 load_dotenv()
 
