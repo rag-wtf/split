@@ -10,6 +10,9 @@ provider:
     images:
       appimage:
         path: ./
+        file: Dockerfile
+        buildArgs:
+          MODEL: ${env:MODEL}
   stage: ${env:STAGE, 'dev'}
   region: us-east-1
   iam:

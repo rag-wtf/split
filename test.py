@@ -7,7 +7,7 @@ def test():
     from fastapi.testclient import TestClient
 
     client = TestClient(create_app())
-    with open("breathing.txt", "rb") as file:
+    with open("breathing.gz", "rb") as file:
         response = client.post("/ingest", files={"file": file})
     print(response.content)
 

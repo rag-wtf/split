@@ -2,7 +2,6 @@ fastapi
 langchain
 python-multipart
 starlette_validation_uploadfile
-openai
 unstructured[all-docs]
 
 # for aws lambda

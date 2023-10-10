@@ -5,13 +5,16 @@ from starlette_validation_uploadfile import ValidateUploadFileMiddleware
 from langchain.document_loaders import UnstructuredFileLoader
 from unstructured.cleaners.core import clean_extra_whitespace
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from transformers import GPT2TokenizerFast
+
 from pydantic import BaseModel
-from typing import List, Mapping, Any
+from typing import List, Mapping, Any, Optional
 import tempfile
 import os
 import hashlib
 import nltk
 import gzip
+import magic
 
 delete_temp_file = bool(os.getenv("DELETE_TEMP_FILE", ""))
 print(f"delete_temp_file {delete_temp_file}")
@@ -20,6 +23,7 @@ print(f"delete_temp_file {delete_temp_file}")
 nltk.data.path.append(os.getenv("NLTK_DATA"))
 
 router = APIRouter()
+tokenizer = GPT2TokenizerFast.from_pretrained(os.getenv("MODEL"))
 
 
 def create_app():
@@ -52,6 +56,16 @@ def is_gz_file(file_path):
         return f.read(2) == b'\x1f\x8b'
 
 
+def get_mime_type(file_path):
+    mime_type = magic.from_file(file_path, mime=True)
+    return mime_type
+
+
+def count_tokens(text: str):
+    encoded = tokenizer.encode(text)
+    return len(encoded)
+
+
 def load(file):
     # REF: https://python.langchain.com/docs/integrations/document_loaders/unstructured_file
     if is_gz_file(file.name):
@@ -67,13 +81,13 @@ def load(file):
                     file_path=decompressed_file.name,
                     post_processors=[clean_extra_whitespace],
                 )
-                return loader.load()
+                return loader.load(), get_mime_type(decompressed_file.name)
     else:
         loader = UnstructuredFileLoader(
             file_path=file.name,
             post_processors=[clean_extra_whitespace],
         )
-        return loader.load()
+        return loader.load(), get_mime_type(file.name)
 
 
 md5 = hashlib.md5()
@@ -86,22 +100,30 @@ def get_doc_id(doc):
 
 
 def split(doc):
-    text_splitter = RecursiveCharacterTextSplitter(
+    text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
+        tokenizer=tokenizer,
         chunk_size=int(os.getenv("CHUNK_SIZE")),
         chunk_overlap=int(os.getenv("CHUNK_OVERLAP")),
-        length_function=len)
+    )
     chunks = text_splitter.split_text(doc.page_content)
     return chunks
 
 
-class LoadSplitEmbedResponse(BaseModel):
-    id: str = "_"
+class DocumentItem(BaseModel):
     content: str
+    tokens_count: int
     metadata: Mapping[str, Any]
 
 
+class Document(BaseModel):
+    content: Optional[str]
+    tokens_count: int
+    mime_type: str
+    items: List[DocumentItem]
+
+
 @router.post("/ingest")
-async def load_split_embed(file: UploadFile = File(...)):
+async def load_split_count(file: UploadFile = File(...)):
     chunk_size = 1024 * 1024  # 1 MB
 
     with tempfile.NamedTemporaryFile(
@@ -114,21 +136,30 @@ async def load_split_embed(file: UploadFile = File(...)):
                 break
             temp.write(chunk)
         temp.flush()
-        docs = load(temp)
+        docs, mime_type = load(temp)
+        print("mime_type", mime_type)
         doc = docs[0]
         texts = split(doc)
         print(len(texts))
         print(texts[1])
         id = get_doc_id(doc)
-        responses = []
+        items = []
         for i, text in enumerate(texts):
-            responses.append(
-                LoadSplitEmbedResponse(
+            items.append(
+                DocumentItem(
                     content=text,
+                    tokens_count=count_tokens(text),
                     metadata={'id': f'{id}-{i}'},
                 )
             )
-        return responses
+        document = Document(
+            # None when the source doc is text/plain
+            content=doc.page_content if mime_type != "text/plain" else None,
+            tokens_count=count_tokens(doc.page_content),
+            mime_type=mime_type,
+            items=items,
+        )
+        return document
 
 
 if __name__ == "__main__":

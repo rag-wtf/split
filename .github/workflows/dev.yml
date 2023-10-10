@@ -20,8 +20,7 @@ jobs:
   deploy-dev:
     runs-on: ubuntu-latest
     env:
-      EMBEDDING_MODEL_URL: ${{ secrets.EMBEDDING_MODEL_URL }}
-      EMBEDDING_MODEL_KEY: ${{ secrets.EMBEDDING_MODEL_KEY }}
+      MODEL: Xenova/text-embedding-ada-002
 
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
@@ -29,7 +28,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup NodeJS 18
         uses: actions/setup-node@v3
