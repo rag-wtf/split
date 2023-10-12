@@ -37,14 +37,14 @@ def create_app():
         allow_headers=["*"],
     )
 
-    app.add_middleware(
-        ValidateUploadFileMiddleware,
-        app_path="/ingest",
-        max_size=int(os.getenv("MAX_FILE_SIZE_IN_MB")) * 1048576,  # 1 MB
-        # file_type=os.getenv("SUPPORTED_FILE_TYPES").split(",")
-    )
+    # app.add_middleware(
+    #    ValidateUploadFileMiddleware,
+    #    app_path="/ingest",
+    #    max_size=int(os.getenv("MAX_FILE_SIZE_IN_MB")) * 1048576,  # 1 MB
+    # file_type=os.getenv("SUPPORTED_FILE_TYPES").split(",")
+    # )
 
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    # app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     app.include_router(router)
 
