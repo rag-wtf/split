@@ -24,13 +24,13 @@ supported_file_types = os.getenv("SUPPORTED_FILE_TYPES")
 chunk_size=int(os.getenv("CHUNK_SIZE"))
 chunk_overlap=int(os.getenv("CHUNK_OVERLAP"))
 
-print("delete_temp_file", delete_temp_file)
-print("nltk_data", nltk_data)
-print("model", model)
-print("max_file_size_in_mb", max_file_size_in_mb)
-print("supported_file_types", supported_file_types)
-print("chunk_size", chunk_size)
-print("chunk_overlap", chunk_overlap)
+print("delete_temp_file:", delete_temp_file)
+print("nltk_data:", nltk_data)
+print("model:", model)
+print("max_file_size_in_mb:", max_file_size_in_mb)
+print("supported_file_types:", supported_file_types)
+print("chunk_size:", chunk_size)
+print("chunk_overlap:", chunk_overlap)
 
 # Set the nltk.data.path with environment variable
 nltk.data.path.append(nltk_data)
@@ -167,6 +167,8 @@ async def load_split_count(file: UploadFile = File(...)):
                         metadata={'id': f'{id}-{i}'},
                     )
                 )
+        else:
+            print('doc_tokens_count <= chunk_size: doc.page_content:', doc.page_content)        
         document = Document(
             # None when the source doc is text/plain
             content=doc.page_content if mime_type != "text/plain" else None,
