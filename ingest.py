@@ -17,13 +17,26 @@ import gzip
 import magic
 
 delete_temp_file = bool(os.getenv("DELETE_TEMP_FILE", ""))
-print(f"delete_temp_file {delete_temp_file}")
+nltk_data = os.getenv("NLTK_DATA")
+model = os.getenv("MODEL")
+max_file_size_in_mb = int(os.getenv("MAX_FILE_SIZE_IN_MB"))
+supported_file_types = os.getenv("SUPPORTED_FILE_TYPES")
+chunk_size=int(os.getenv("CHUNK_SIZE"))
+chunk_overlap=int(os.getenv("CHUNK_OVERLAP"))
+
+print("delete_temp_file", delete_temp_file)
+print("nltk_data", nltk_data)
+print("model", model)
+print("max_file_size_in_mb", max_file_size_in_mb)
+print("supported_file_types", supported_file_types)
+print("chunk_size", chunk_size)
+print("chunk_overlap", chunk_overlap)
 
 # Set the nltk.data.path with environment variable
-nltk.data.path.append(os.getenv("NLTK_DATA"))
+nltk.data.path.append(nltk_data)
 
 router = APIRouter()
-tokenizer = GPT2TokenizerFast.from_pretrained(os.getenv("MODEL"))
+tokenizer = GPT2TokenizerFast.from_pretrained(model)
 
 
 def create_app():
@@ -37,14 +50,14 @@ def create_app():
         allow_headers=["*"],
     )
 
-    # app.add_middleware(
-    #    ValidateUploadFileMiddleware,
-    #    app_path="/ingest",
-    #    max_size=int(os.getenv("MAX_FILE_SIZE_IN_MB")) * 1048576,  # 1 MB
-    # file_type=os.getenv("SUPPORTED_FILE_TYPES").split(",")
-    # )
+    app.add_middleware(
+        ValidateUploadFileMiddleware,
+        app_path="/ingest",
+        max_size=max_file_size_in_mb * 1048576,  # 1 MB
+        file_type=supported_file_types.split(",")
+    )
 
-    # app.add_middleware(GZipMiddleware, minimum_size=1000)
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     app.include_router(router)
 
@@ -102,8 +115,8 @@ def get_doc_id(doc):
 def split(doc):
     text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
         tokenizer=tokenizer,
-        chunk_size=int(os.getenv("CHUNK_SIZE")),
-        chunk_overlap=int(os.getenv("CHUNK_OVERLAP")),
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
     )
     chunks = text_splitter.split_text(doc.page_content)
     return chunks
@@ -124,14 +137,14 @@ class Document(BaseModel):
 
 @router.post("/ingest")
 async def load_split_count(file: UploadFile = File(...)):
-    chunk_size = 1024 * 1024  # 1 MB
+    file_chunk_size = 1024 * 1024  # 1 MB
 
     with tempfile.NamedTemporaryFile(
             mode='wb',
-            buffering=chunk_size,
+            buffering=file_chunk_size,
             delete=delete_temp_file) as temp:
         while True:
-            chunk = await file.read(chunk_size)
+            chunk = await file.read(file_chunk_size)
             if not chunk:
                 break
             temp.write(chunk)
@@ -139,23 +152,25 @@ async def load_split_count(file: UploadFile = File(...)):
         docs, mime_type = load(temp)
         print("mime_type", mime_type)
         doc = docs[0]
-        texts = split(doc)
-        print(len(texts))
-        print(texts[1])
-        id = get_doc_id(doc)
+        doc_tokens_count=count_tokens(doc.page_content)
         items = []
-        for i, text in enumerate(texts):
-            items.append(
-                DocumentItem(
-                    content=text,
-                    tokens_count=count_tokens(text),
-                    metadata={'id': f'{id}-{i}'},
+        if (doc_tokens_count > chunk_size):
+            texts = split(doc)
+            print(len(texts))
+            print(texts[1])
+            id = get_doc_id(doc)
+            for i, text in enumerate(texts):
+                items.append(
+                    DocumentItem(
+                        content=text,
+                        tokens_count=count_tokens(text),
+                        metadata={'id': f'{id}-{i}'},
+                    )
                 )
-            )
         document = Document(
             # None when the source doc is text/plain
             content=doc.page_content if mime_type != "text/plain" else None,
-            tokens_count=count_tokens(doc.page_content),
+            tokens_count=doc_tokens_count,
             mime_type=mime_type,
             items=items,
         )
