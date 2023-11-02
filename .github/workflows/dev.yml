@@ -62,18 +62,18 @@ jobs:
       - name: Test Lambda functions
         run: "curl -X POST -H 'Content-Type: multipart/form-data' -F 'file=@breathing.txt' $(cat endpoint)ingest"
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
+      #- name: Setup Python
+      #  uses: actions/setup-python@v4
+      #  with:
+      #    python-version: "3.11"
 
-      - name: Install dependencies
-        run: pip install --no-cache-dir -r requirements.txt
+      #- name: Install dependencies
+      #  run: pip install --no-cache-dir -r requirements.txt
 
-      - name: Create deploy-requirements.txt
-        run: pip freeze > deploy-requirements.txt
+      #- name: Create deploy-requirements.txt
+      #  run: pip freeze > deploy-requirements.txt
 
-      - name: Commit and push deploy-requirements.txt
-        uses: stefanzweifel/git-auto-commit-action@v4.16.0
-        with:
-          commit_message: "chore: updated deploy-requirements.txt"
+      #- name: Commit and push deploy-requirements.txt
+      #  uses: stefanzweifel/git-auto-commit-action@v4.16.0
+      #  with:
+      #    commit_message: "chore: updated deploy-requirements.txt"

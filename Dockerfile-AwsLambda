@@ -19,16 +19,12 @@ ARG MODEL
 
 RUN mkdir -p ${MODEL}
 
-# Install runtime dependencies
-RUN apt-get update && \
-    apt-get install -y libgl1
-
 COPY --from=build-image ${MODEL} ${MODEL}
 COPY ingest.py ./
 COPY starlette_validation_uploadfile.py ./
-COPY requirements.txt ./
+COPY deploy-requirements.txt ./
 
 RUN pip install --upgrade pip setuptools && \ 
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r deploy-requirements.txt
 
 CMD ["ingest.handler"]
