@@ -21,8 +21,8 @@ nltk_data = os.getenv("NLTK_DATA")
 model = os.getenv("MODEL")
 max_file_size_in_mb = int(os.getenv("MAX_FILE_SIZE_IN_MB"))
 supported_file_types = os.getenv("SUPPORTED_FILE_TYPES")
-chunk_size=int(os.getenv("CHUNK_SIZE"))
-chunk_overlap=int(os.getenv("CHUNK_OVERLAP"))
+chunk_size = int(os.getenv("CHUNK_SIZE"))
+chunk_overlap = int(os.getenv("CHUNK_OVERLAP"))
 
 print("delete_temp_file:", delete_temp_file)
 print("nltk_data:", nltk_data)
@@ -152,7 +152,7 @@ async def load_split_count(file: UploadFile = File(...)):
         docs, mime_type = load(temp)
         print("mime_type", mime_type)
         doc = docs[0]
-        doc_tokens_count=count_tokens(doc.page_content)
+        doc_tokens_count = count_tokens(doc.page_content)
         items = []
         if (doc_tokens_count > chunk_size):
             texts = split(doc)
@@ -168,7 +168,8 @@ async def load_split_count(file: UploadFile = File(...)):
                     )
                 )
         else:
-            print('doc_tokens_count <= chunk_size: doc.page_content:', doc.page_content)        
+            print('doc_tokens_count <= chunk_size: doc.page_content:',
+                  doc.page_content)
         document = Document(
             # None when the source doc is text/plain
             content=doc.page_content if mime_type != "text/plain" else None,
@@ -182,7 +183,7 @@ async def load_split_count(file: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        create_app(), host=os.getenv("HOST", "localhost"), port=int(os.getenv("PORT", 8000))
+        create_app(), host=os.getenv("HOST", "0.0.0.0"), port=int(os.getenv("PORT", 8000))
     )
 elif os.getenv("RUNTIME") == "aws-lambda":
     from mangum import Mangum

@@ -10,7 +10,7 @@ provider:
     images:
       appimage:
         path: ./
-        file: Dockerfile
+        file: Dockerfile-AwsLambda
         buildArgs:
           MODEL: ${env:MODEL}
   stage: ${env:STAGE, 'dev'}
