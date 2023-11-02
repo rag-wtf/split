@@ -21,6 +21,7 @@ RUN mkdir -p ${MODEL}
 
 COPY --from=build-image ${MODEL} ${MODEL}
 COPY ingest.py ./
+COPY starlette_validation_uploadfile.py ./
 COPY requirements.txt ./
 
 RUN pip install --upgrade pip setuptools && \ 
