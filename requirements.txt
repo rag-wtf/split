@@ -6,7 +6,7 @@ unstructured[all-docs]
 # for aws lambda
 mangum
 # for local / self-host
-# uvicorn
+uvicorn
 # for testclient
 #httpx
 #python-dotenv

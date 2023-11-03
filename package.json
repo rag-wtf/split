@@ -21,5 +21,13 @@
   "bugs": {
     "url": "https://github.com/limcheekin/load-split-embed/issues"
   },
-  "homepage": "https://github.com/limcheekin/load-split-embed#readme"
+  "homepage": "https://github.com/limcheekin/load-split-embed#readme",
+  "scripts": {
+    "docker-build": "docker build -t document-splitter . --build-arg MODEL=Xenova/text-embedding-ada-002",
+    "docker-save": "docker save document-splitter | gzip > document-splitter.tar.gz",
+    "docker-load": "docker load -i document-splitter.tar.gz",
+    "docker-run": "docker run -v /tmp:/tmp --env-file ./.env -p 8000:8000 -d document-splitter",
+    "docker-stop": "./docker-stop.sh",
+    "rm-all-docker-data": "docker system prune -a --volumes"
+  }
 }

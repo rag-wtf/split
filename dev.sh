@@ -1,1 +1,1 @@
-curl -X POST -H "Content-Type: multipart/form-data" -F "file=@breathing.gz" http://localhost:8000/ingest
+curl -X POST -H "Content-Type: multipart/form-data" -F "file=@breathing.txt" http://localhost:8000/ingest
