@@ -1,4 +1,4 @@
-from ingest import create_app
+from split import create_app
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -8,7 +8,7 @@ def test():
 
     client = TestClient(create_app())
     with open("breathing.gz", "rb") as file:
-        response = client.post("/ingest", files={"file": file})
+        response = client.post("/split", files={"file": file})
     print(response.content)
 
 

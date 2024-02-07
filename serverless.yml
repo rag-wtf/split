@@ -1,4 +1,4 @@
-service: load-split-count
+service: split
 
 frameworkVersion: "3"
 
@@ -11,8 +11,6 @@ provider:
       appimage:
         path: ./
         file: Dockerfile-AwsLambda
-        buildArgs:
-          MODEL: ${env:MODEL}
   stage: ${env:STAGE, 'dev'}
   region: us-east-1
   iam:
@@ -24,7 +22,7 @@ provider:
           Resource: "*"
 
 functions:
-  ingest:
+  split:
     image:
       name: appimage
     memorySize: 512
@@ -36,8 +34,7 @@ functions:
       MAX_FILE_SIZE_IN_MB: 10
       NLTK_DATA: /tmp
       DELETE_TEMP_FILE: 1
-      MODEL: ${env:MODEL}
-      TRANSFORMERS_CACHE: /tmp/transformer_cache
+      HF_HOME: /tmp/hf_home
     timeout:
       900
       # https://www.serverless.com/framework/docs/providers/aws/guide/functions#lambda-function-urls

@@ -19,9 +19,6 @@ on:
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
-    env:
-      MODEL: Xenova/text-embedding-ada-002
-
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
       # added or changed files to the repository.
@@ -60,7 +57,7 @@ jobs:
         run: echo $(cat endpoint)
 
       - name: Test Lambda functions
-        run: "curl -X POST -H 'Content-Type: multipart/form-data' -F 'file=@breathing.txt' $(cat endpoint)ingest"
+        run: "curl -X POST -H 'Content-Type: multipart/form-data' -F 'file=@breathing.txt' $(cat endpoint)split"
 
       #- name: Setup Python
       #  uses: actions/setup-python@v4

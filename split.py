@@ -1,11 +1,10 @@
-from fastapi import FastAPI, APIRouter, File, UploadFile
+from fastapi import FastAPI, APIRouter, File, UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette_validation_uploadfile import ValidateUploadFileMiddleware
-from langchain.document_loaders import UnstructuredFileLoader
+from langchain_community.document_loaders import UnstructuredFileLoader
 from unstructured.cleaners.core import clean_extra_whitespace
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from transformers import GPT2TokenizerFast
 
 from pydantic import BaseModel
 from typing import List, Mapping, Any, Optional
@@ -18,7 +17,6 @@ import magic
 
 delete_temp_file = bool(os.getenv("DELETE_TEMP_FILE", ""))
 nltk_data = os.getenv("NLTK_DATA")
-model = os.getenv("MODEL")
 max_file_size_in_mb = int(os.getenv("MAX_FILE_SIZE_IN_MB"))
 supported_file_types = os.getenv("SUPPORTED_FILE_TYPES")
 chunk_size = int(os.getenv("CHUNK_SIZE"))
@@ -26,7 +24,6 @@ chunk_overlap = int(os.getenv("CHUNK_OVERLAP"))
 
 print("delete_temp_file:", delete_temp_file)
 print("nltk_data:", nltk_data)
-print("model:", model)
 print("max_file_size_in_mb:", max_file_size_in_mb)
 print("supported_file_types:", supported_file_types)
 print("chunk_size:", chunk_size)
@@ -36,7 +33,6 @@ print("chunk_overlap:", chunk_overlap)
 nltk.data.path.append(nltk_data)
 
 router = APIRouter()
-tokenizer = GPT2TokenizerFast.from_pretrained(model)
 
 
 def create_app():
@@ -52,7 +48,7 @@ def create_app():
 
     app.add_middleware(
         ValidateUploadFileMiddleware,
-        app_path="/ingest",
+        app_path="/split",
         max_size=max_file_size_in_mb * 1048576,  # 1 MB
         file_type=supported_file_types.split(",")
     )
@@ -72,11 +68,6 @@ def is_gz_file(file_path):
 def get_mime_type(file_path):
     mime_type = magic.from_file(file_path, mime=True)
     return mime_type
-
-
-def count_tokens(text: str):
-    encoded = tokenizer.encode(text)
-    return len(encoded)
 
 
 def load(file):
@@ -112,11 +103,11 @@ def get_doc_id(doc):
     return uid
 
 
-def split(doc):
-    text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
-        tokenizer=tokenizer,
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
+def split(doc, q_chunk_size, q_chunk_overlap):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=q_chunk_size,
+        chunk_overlap=q_chunk_overlap,
+        length_function=len
     )
     chunks = text_splitter.split_text(doc.page_content)
     return chunks
@@ -124,19 +115,26 @@ def split(doc):
 
 class DocumentItem(BaseModel):
     content: str
-    tokens_count: int
     metadata: Mapping[str, Any]
 
 
 class Document(BaseModel):
     content: Optional[str]
-    tokens_count: int
     mime_type: str
     items: List[DocumentItem]
 
 
-@router.post("/ingest")
-async def load_split_count(file: UploadFile = File(...)):
+@router.post(
+    "/split",
+    response_model=Document,
+)
+async def load_split(
+    file: UploadFile = File(...),
+    q_chunk_size: int = Query(
+        chunk_size, description='Maximum size of chunks in characters to return'),
+    q_chunk_overlap: int = Query(
+        chunk_overlap, description='Overlap in characters between chunks')
+):
     file_chunk_size = 1024 * 1024  # 1 MB
 
     with tempfile.NamedTemporaryFile(
@@ -152,10 +150,9 @@ async def load_split_count(file: UploadFile = File(...)):
         docs, mime_type = load(temp)
         print("mime_type", mime_type)
         doc = docs[0]
-        doc_tokens_count = count_tokens(doc.page_content)
         items = []
-        if (doc_tokens_count > chunk_size):
-            texts = split(doc)
+        if (len(doc.page_content) > q_chunk_size):
+            texts = split(doc, q_chunk_size, q_chunk_overlap)
             print(len(texts))
             print(texts[1])
             id = get_doc_id(doc)
@@ -163,17 +160,15 @@ async def load_split_count(file: UploadFile = File(...)):
                 items.append(
                     DocumentItem(
                         content=text,
-                        tokens_count=count_tokens(text),
                         metadata={'id': f'{id}-{i}'},
                     )
                 )
         else:
-            print('doc_tokens_count <= chunk_size: doc.page_content:',
+            print(f'len(doc.page_content) {len(doc.page_content)} <= chunk_size {q_chunk_size}: doc.page_content:',
                   doc.page_content)
         document = Document(
             # None when the source doc is text/plain
             content=doc.page_content if mime_type != "text/plain" else None,
-            tokens_count=doc_tokens_count,
             mime_type=mime_type,
             items=items,
         )
