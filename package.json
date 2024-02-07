@@ -1,8 +1,8 @@
 {
-  "name": "load-split-count",
-  "description": "Load, Split and Count (LSC) endpoint",
+  "name": "split",
+  "description": "Split document endpoint",
   "version": "0.1.0",
-  "main": "ingest.py",
+  "main": "split.py",
   "keywords": [
     "load",
     "split",
@@ -16,14 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/limcheekin/load-split-count"
+    "url": "git+https://github.com/limcheekin/split"
   },
   "bugs": {
-    "url": "https://github.com/limcheekin/load-split-embed/issues"
+    "url": "https://github.com/limcheekin/split/issues"
   },
-  "homepage": "https://github.com/limcheekin/load-split-embed#readme",
+  "homepage": "https://github.com/limcheekin/split#readme",
   "scripts": {
-    "docker-build": "docker build -t document-splitter . --build-arg MODEL=Xenova/text-embedding-ada-002",
+    "docker-build": "docker build -t document-splitter .",
     "docker-save": "docker save document-splitter | gzip > document-splitter.tar.gz",
     "docker-load": "docker load -i document-splitter.tar.gz",
     "docker-run": "docker run -v /tmp:/tmp --env-file ./.env -p 8000:8000 -d document-splitter",

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python -B ingest.py
+python -B split.py

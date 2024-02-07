@@ -1,5 +1,6 @@
-fastapi
+fastapi==0.103.2
 langchain
+langchain-community
 python-multipart
 unstructured[all-docs]
 
