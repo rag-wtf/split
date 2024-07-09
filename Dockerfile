@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 COPY split.py ./
-COPY starlette_validation_uploadfile.py ./
+COPY validation_uploadfile.py ./
 COPY start_server.sh ./
 COPY requirements.txt ./
 

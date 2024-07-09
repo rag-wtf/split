@@ -1,7 +1,7 @@
 FROM public.ecr.aws/lambda/python:3.11
 
 COPY split.py ./
-COPY starlette_validation_uploadfile.py ./
+COPY validation_uploadfile.py ./
 COPY deploy-requirements.txt ./
 
 RUN pip install --upgrade pip setuptools && \ 
