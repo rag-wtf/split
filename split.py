@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, File, UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from starlette_validation_uploadfile import ValidateUploadFileMiddleware
+from validation_uploadfile import ValidateUploadFileMiddleware
 from langchain_community.document_loaders import UnstructuredFileLoader
 from unstructured.cleaners.core import clean_extra_whitespace
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -17,7 +17,7 @@ import magic
 
 delete_temp_file = bool(os.getenv("DELETE_TEMP_FILE", ""))
 nltk_data = os.getenv("NLTK_DATA")
-max_file_size_in_mb = int(os.getenv("MAX_FILE_SIZE_IN_MB"))
+max_file_size_in_mb = float(os.getenv("MAX_FILE_SIZE_IN_MB"))
 supported_file_types = os.getenv("SUPPORTED_FILE_TYPES")
 chunk_size = int(os.getenv("CHUNK_SIZE"))
 chunk_overlap = int(os.getenv("CHUNK_OVERLAP"))
@@ -48,9 +48,9 @@ def create_app():
 
     app.add_middleware(
         ValidateUploadFileMiddleware,
-        app_path="/split",
+        app_paths="/split",
         max_size=max_file_size_in_mb * 1048576,  # 1 MB
-        file_type=supported_file_types.split(",")
+        file_types=supported_file_types.split(",")
     )
 
     app.add_middleware(GZipMiddleware, minimum_size=1000)

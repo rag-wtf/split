@@ -11,3 +11,5 @@ uvicorn
 # for testclient
 #httpx
 #python-dotenv
+#pytest
+#trio
