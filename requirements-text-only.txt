@@ -2,7 +2,8 @@ fastapi
 langchain
 langchain-community
 python-multipart
-unstructured[all-docs]
+unstructured
+psutil
 
 # for aws lambda
 mangum
