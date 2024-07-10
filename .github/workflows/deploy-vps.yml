@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build docker image
-        run: docker build -t document-splitter .
+        run: docker build -f Dockerfile-VPS -t document-splitter .
 
       - name: Clean up docker build cache
         run: |
@@ -31,7 +31,7 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           scp: ./document-splitter.tar.gz => ~/document-splitter/
           last_ssh: |
+            docker container stop split
             docker image rm document-splitter
             docker load -i document-splitter.tar.gz
-            docker container stop split
             docker run --rm --name split -v /tmp:/tmp --env-file ~/document-splitter/.env -p 8080:8000 -d document-splitter
