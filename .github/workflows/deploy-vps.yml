@@ -32,6 +32,7 @@ jobs:
           scp: ./document-splitter.tar.gz => ~/document-splitter/
           last_ssh: |
             docker container stop split
-            docker image rm document-splitter
-            docker load -i document-splitter.tar.gz
+            docker image rm document-splitter -f
+            docker load -i ~/document-splitter/document-splitter.tar.gz
             docker run --rm -d --name split --network server-reverse-proxy-link -p 8080:8000 -v /tmp:/tmp --env-file ~/document-splitter/.env document-splitter:latest
+            rm ~/document-splitter/document-splitter.tar.gz
