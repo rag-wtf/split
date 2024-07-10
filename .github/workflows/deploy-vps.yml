@@ -16,9 +16,10 @@ jobs:
       - name: Clean up docker build cache
         run: |
           docker system df
+          docker image prune -f
           docker buildx prune -f
           docker system df
-          
+
       - name: Save docker image to GZ file
         run: docker save document-splitter | gzip > document-splitter.tar.gz
 
