@@ -13,7 +13,13 @@ jobs:
       - name: Build docker image
         run: docker build -t document-splitter .
 
-      - name: Save to GZ file
+      - name: Clean up docker build cache
+        run: |
+          docker system df
+          docker buildx prune -f
+          docker system df
+          
+      - name: Save docker image to GZ file
         run: docker save document-splitter | gzip > document-splitter.tar.gz
 
       - name: Deploy GZ file and Restart container
