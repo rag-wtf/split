@@ -34,4 +34,4 @@ jobs:
             docker container stop split
             docker image rm document-splitter
             docker load -i document-splitter.tar.gz
-            docker run --rm --name split -v /tmp:/tmp --env-file ~/document-splitter/.env -p 8080:8000 -d document-splitter
+            docker run --rm -d --name split --network server-reverse-proxy-link -p 8080:8000 -v /tmp:/tmp --env-file ~/document-splitter/.env document-splitter:latest
