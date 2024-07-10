@@ -1,0 +1,27 @@
+name: Deploy to VPS
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Build docker image
+        run: docker build -t document-splitter .
+
+      - name: Save to GZ file
+        run: docker save document-splitter | gzip > document-splitter.tar.gz
+
+      - name: Deploy GZ file and Restart container
+        uses: cross-the-world/ssh-scp-ssh-pipelines@latest
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          user: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          scp: ./document-splitter.tar.gz => ~/document-splitter/
+          last_ssh: |
+            docker image rm document-splitter
+            docker load -i document-splitter.tar.gz
+            docker container stop split
+            docker run --rm --name split -v /tmp:/tmp --env-file ~/document-splitter/.env -p 8080:8000 -d document-splitter
