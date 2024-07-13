@@ -13,6 +13,7 @@ RUN apt-get update && \
 
 RUN pip install --upgrade pip setuptools && \ 
     pip install --no-cache-dir -r requirements-text-only.txt && \
+    python -m nltk.downloader punkt && \
     chmod +x ./start_server.sh
 
 # Run the server start script
