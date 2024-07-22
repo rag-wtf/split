@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from validation_uploadfile import ValidateUploadFileMiddleware
 from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain_community.document_loaders import PyMuPDFLoader
 from unstructured.cleaners.core import clean_extra_whitespace
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
@@ -81,18 +82,30 @@ def load(file):
                 for chunk in gzipped_file:
                     decompressed_file.write(chunk)
                 decompressed_file.flush()
-                loader = UnstructuredFileLoader(
-                    file_path=decompressed_file.name,
-                    post_processors=[clean_extra_whitespace],
-                )
-                return loader.load(), get_mime_type(decompressed_file.name)
+                docs = load_by_unstructured(decompressed_file)
+                return docs, get_mime_type(decompressed_file.name)
     else:
-        loader = UnstructuredFileLoader(
-            file_path=file.name,
-            post_processors=[clean_extra_whitespace],
-        )
-        return loader.load(), get_mime_type(file.name)
+        mime_type = get_mime_type(file.name)
+        if mime_type == 'application/pdf':
+            loader = PyMuPDFLoader(file.name, extract_images=True)
+            try:
+                docs = loader.load()
+                if len(docs) == 0:
+                    docs = load_by_unstructured(file)
+            except:
+                docs = load_by_unstructured(file)
 
+        else:
+            docs = load_by_unstructured(file)    
+        return docs, mime_type
+
+
+def load_by_unstructured(file):
+    loader = UnstructuredFileLoader(
+                file_path=file.name,
+                post_processors=[clean_extra_whitespace],
+            )
+    return loader.load()
 
 md5 = hashlib.md5()
 
@@ -104,13 +117,29 @@ def get_doc_id(doc):
 
 
 def split(doc, q_chunk_size, q_chunk_overlap):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=q_chunk_size,
-        chunk_overlap=q_chunk_overlap,
-        length_function=len
-    )
-    chunks = text_splitter.split_text(doc.page_content)
-    return chunks
+    items = []
+    if (len(doc.page_content) > q_chunk_size):
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=q_chunk_size,
+            chunk_overlap=q_chunk_overlap,
+            length_function=len
+        )
+        texts = text_splitter.split_text(doc.page_content)
+        print(len(texts))
+        print(texts[1])
+        id = get_doc_id(doc)
+        doc.metadata['id'] = id
+        for i, text in enumerate(texts):
+            items.append(
+                DocumentItem(
+                    content=text,
+                    metadata=doc.metadata,
+                )
+            )
+    else:
+        print(f'len(doc.page_content) {len(doc.page_content)} <= chunk_size {q_chunk_size}: doc.page_content:',
+            doc.page_content)
+    return items
 
 
 class DocumentItem(BaseModel):
@@ -148,31 +177,32 @@ async def load_split(
             temp.write(chunk)
         temp.flush()
         docs, mime_type = load(temp)
-        print("mime_type", mime_type)
-        doc = docs[0]
-        items = []
-        if (len(doc.page_content) > q_chunk_size):
-            texts = split(doc, q_chunk_size, q_chunk_overlap)
-            print(len(texts))
-            print(texts[1])
-            id = get_doc_id(doc)
-            for i, text in enumerate(texts):
-                items.append(
-                    DocumentItem(
-                        content=text,
-                        metadata={'id': f'{id}-{i}'},
-                    )
-                )
-        else:
-            print(f'len(doc.page_content) {len(doc.page_content)} <= chunk_size {q_chunk_size}: doc.page_content:',
-                  doc.page_content)
-        document = Document(
-            # None when the source doc is text/plain
-            content=doc.page_content if mime_type != "text/plain" else None,
-            mime_type=mime_type,
-            items=items,
-        )
-        return document
+        docs_len = len(docs)
+        print("mime_type", mime_type, ', docs_len', docs_len)
+
+        if docs_len > 1:
+            items = []
+            content = ''
+            for doc in docs:
+                items.extend(split(doc, q_chunk_size, q_chunk_overlap))
+                content += doc.page_content
+            document = Document(
+                # None when the source doc is text/plain
+                content=content,
+                mime_type=mime_type,
+                items=items,
+            )
+            return document
+        else:     
+            doc = docs[0]
+            items = split(doc, q_chunk_size, q_chunk_overlap)
+            document = Document(
+                # None when the source doc is text/plain
+                content=doc.page_content if mime_type != "text/plain" else None,
+                mime_type=mime_type,
+                items=items,
+            )
+            return document
 
 
 if __name__ == "__main__":

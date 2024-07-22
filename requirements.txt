@@ -3,6 +3,9 @@ langchain
 langchain-community
 python-multipart
 unstructured[all-docs]
+pymupdf
+# extract image to text from pdf
+rapidocr-onnxruntime
 
 # for aws lambda
 mangum

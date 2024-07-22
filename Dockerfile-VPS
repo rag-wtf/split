@@ -8,7 +8,10 @@ COPY deploy-requirements.txt ./
 # Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y libmagic-dev \
-    libopencv-dev python3-opencv
+    libopencv-dev \
+    python3-opencv \
+    poppler-utils \ # pdf
+    tesseract-ocr # pdf
 
 RUN pip install --upgrade pip setuptools && \ 
     pip install --no-cache-dir -r deploy-requirements.txt && \
