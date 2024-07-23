@@ -23,10 +23,10 @@
   },
   "homepage": "https://github.com/limcheekin/split#readme",
   "scripts": {
-    "docker-build": "docker build -t document-splitter .",
-    "docker-save": "docker save document-splitter | gzip > document-splitter.tar.gz",
-    "docker-load": "docker load -i document-splitter.tar.gz",
-    "docker-run": "docker run -v /tmp:/tmp --env-file ./.env -p 8000:8000 -d document-splitter",
+    "docker-build": "docker build -t ragwtf-text-splitter .",
+    "docker-save": "docker save ragwtf-text-splitter | gzip > ragwtf-text-splitter.tar.gz",
+    "docker-load": "docker load -i ragwtf-text-splitter.tar.gz",
+    "docker-run": "docker run -v /tmp:/tmp --env-file ./.env -p 8000:8000 -d ragwtf-text-splitter",
     "docker-stop": "./docker-stop.sh",
     "rm-all-docker-data": "docker system prune -a --volumes"
   }

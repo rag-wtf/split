@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build docker image
-        run: docker build -f Dockerfile-VPS -t document-splitter .
+        run: docker build -f Dockerfile-VPS -t ragwtf-text-splitter .
 
       - name: Clean up docker build cache
         run: |
@@ -21,7 +21,7 @@ jobs:
           docker system df
 
       - name: Save docker image to GZ file
-        run: docker save document-splitter | gzip > document-splitter.tar.gz
+        run: docker save ragwtf-text-splitter | gzip > ragwtf-text-splitter.tar.gz
 
       - name: Deploy GZ file and Restart container
         uses: cross-the-world/ssh-scp-ssh-pipelines@latest
@@ -29,10 +29,10 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           user: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
-          scp: ./document-splitter.tar.gz => ~/document-splitter/
+          scp: ./ragwtf-text-splitter.tar.gz => ~/ragwtf-text-splitter/
           last_ssh: |
             docker container stop split
-            docker image rm document-splitter -f
-            docker load -i ~/document-splitter/document-splitter.tar.gz
-            docker run --rm -d --name split --network server-reverse-proxy-link -p 8080:8000 -v /tmp:/tmp --env-file ~/document-splitter/.env document-splitter:latest
-            rm ~/document-splitter/document-splitter.tar.gz
+            docker image rm ragwtf-text-splitter -f
+            docker load -i ~/ragwtf-text-splitter/ragwtf-text-splitter.tar.gz
+            docker run --rm -d --name split --network server-reverse-proxy-link -p 8080:8000 -v /tmp:/tmp --env-file ~/ragwtf-text-splitter/.env ragwtf-text-splitter:latest
+            rm ~/ragwtf-text-splitter/ragwtf-text-splitter.tar.gz

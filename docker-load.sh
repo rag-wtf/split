@@ -1,2 +1,2 @@
 #!/bin/bash
-docker load -i document-splitter.tar.gz
+docker load -i ragwtf-text-splitter.tar.gz

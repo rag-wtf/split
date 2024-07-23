@@ -1,2 +1,2 @@
 #!/bin/bash
-docker save document-splitter | gzip > document-splitter.tar.gz
+docker save ragwtf-text-splitter | gzip > ragwtf-text-splitter.tar.gz

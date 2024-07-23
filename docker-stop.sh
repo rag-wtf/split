@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGE_NAME="document-splitter"
+IMAGE_NAME="ragwtf-text-splitter"
 
 # Get the IDs of all running containers that were started from the image
 CONTAINER_IDS=$(docker ps -q -f ancestor=$IMAGE_NAME)
