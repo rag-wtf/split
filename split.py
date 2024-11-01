@@ -152,6 +152,29 @@ class Document(BaseModel):
     mime_type: str
     items: List[DocumentItem]
 
+class SplitConfig(BaseModel):
+    delete_temp_file: bool
+    nltk_data: str | None
+    max_file_size_in_mb: float
+    supported_file_types: List[str]
+    chunk_size: int
+    chunk_overlap: int
+
+@router.get(
+    "/split/config",
+    response_model=SplitConfig,
+    description="Get the current configurations for the split endpoint"
+)
+async def get_config():
+    return SplitConfig(
+        delete_temp_file=delete_temp_file,
+        nltk_data=nltk_data,
+        max_file_size_in_mb=max_file_size_in_mb,
+        supported_file_types=supported_file_types.split(",") if supported_file_types else [],
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )    
+
 
 @router.post(
     "/split",
