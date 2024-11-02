@@ -2,7 +2,7 @@ from fastapi import FastAPI, APIRouter, File, UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from validation_uploadfile import ValidateUploadFileMiddleware
-from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain_unstructured import UnstructuredLoader
 from langchain_community.document_loaders import PyMuPDFLoader
 from unstructured.cleaners.core import clean_extra_whitespace
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -46,11 +46,12 @@ def create_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
     app.add_middleware(
         ValidateUploadFileMiddleware,
         app_paths="/split",
-        max_size=max_file_size_in_mb * 1048576,  # 1 MB
+        # 1000000 is 1MB for storage, 1048576 is 1MB for memory
+        # REF: 
+        max_size=max_file_size_in_mb * 1000000, 
         file_types=supported_file_types.split(",")
     )
 
@@ -86,24 +87,29 @@ def load(file):
                 return docs, get_mime_type(decompressed_file.name)
     else:
         mime_type = get_mime_type(file.name)
-        if mime_type == 'application/pdf':
-            loader = PyMuPDFLoader(file.name, extract_images=True)
-            try:
-                docs = loader.load()
-                if len(docs) == 0:
-                    docs = load_by_unstructured(file)
-            except:
-                docs = load_by_unstructured(file)
+        #if mime_type == 'application/pdf':
+        #    loader = PyMuPDFLoader(file.name, extract_images=True)
+        #    try:
+        #        docs = loader.load()
+        #        if len(docs) == 0:
+        #            docs = load_by_unstructured(file)
+        #    except:
+        #        docs = load_by_unstructured(file)
 
-        else:
-            docs = load_by_unstructured(file)    
+        #else:
+        docs = load_by_unstructured(file)    
         return docs, mime_type
 
 
 def load_by_unstructured(file):
-    loader = UnstructuredFileLoader(
+    # https://python.langchain.com/docs/integrations/document_loaders/unstructured_file/#chunking
+    # reproduce the same behavior as mode="single" of the UnstructuredFileLoader
+    loader = UnstructuredLoader(
                 file_path=file.name,
                 post_processors=[clean_extra_whitespace],
+                chunking_strategy="basic",
+                max_characters=10000000,
+                include_orig_elements=False,
             )
     return loader.load()
 
@@ -188,7 +194,6 @@ async def load_split(
         chunk_overlap, description='Overlap in characters between chunks')
 ):
     file_chunk_size = 1024 * 1024  # 1 MB
-
     with tempfile.NamedTemporaryFile(
             mode='wb',
             buffering=file_chunk_size,

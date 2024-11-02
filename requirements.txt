@@ -1,6 +1,7 @@
 fastapi
 langchain
 langchain-community
+langchain-unstructured
 python-multipart
 unstructured[all-docs]
 pymupdf
