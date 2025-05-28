@@ -65,6 +65,27 @@ async def test_multiple_files_upload(async_client):
     assert response.status_code == status.HTTP_200_OK
 
 
+async def test_multiple_files_one_unsupported(async_client):
+    # Test uploading multiple files where one has an unsupported content type.
+    # Middleware is configured with [FileTypeName.JPEG, FileTypeName.PNG]
+    files = [
+        ("files", ("test1.jpg", b"fake-jpeg-data", "image/jpeg")), # Supported
+        ("files", ("test.txt", b"fake-text-data", "text/plain"))    # Unsupported
+    ]
+    response = await async_client.post("/upload", files=files)
+    assert response.status_code == status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
+
+
+async def test_multiple_files_different_keys_one_unsupported(async_client):
+    # Test uploading multiple files with different keys, one unsupported.
+    files = {
+        "file1": ("test1.jpg", b"fake-jpeg-data", "image/jpeg"), # Supported
+        "file2": ("test.txt", b"fake-text-data", "text/plain")    # Unsupported
+    }
+    response = await async_client.post("/upload", files=files)
+    assert response.status_code == status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
+
+
 async def test_edge_case_invalid_request_no_file(async_client):
     headers = {"content-type": "application/json"}  
     response = await async_client.post("/upload", headers=headers)
