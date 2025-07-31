@@ -1,10 +1,10 @@
-# load-split-embed
+# load-split
 
 ## Project Purpose and Architecture
 
 ### Purpose
 
-This project provides an API endpoint for loading various document types (e.g., PDF, DOCX, HTML, TXT), splitting their textual content into manageable chunks, and returning these chunks along with metadata. While the project name includes "embed," this specific service focuses on the **Load** and **Split** stages. The output is designed to be suitable for preprocessing data for downstream tasks, particularly for Retrieval Augmented Generation (RAG) pipelines where these chunks would typically be fed into an embedding model.
+This project provides an API endpoint for loading various document types (e.g., PDF, DOCX, HTML, TXT), splitting their textual content into manageable chunks, and returning these chunks along with metadata. This specific service focuses on the **Load** and **Split** stages. The output is designed to be suitable for preprocessing data for downstream tasks, particularly for Retrieval Augmented Generation (RAG) pipelines where these chunks would typically be fed into an embedding model.
 
 ### Architecture
 
@@ -83,13 +83,13 @@ The application uses several environment variables for configuration. For local 
     ```
 
 5.  **Running the application locally (Uvicorn):**
-    You can run the FastAPI application directly using Uvicorn:
+    You can run the FastAPI application directly using the following shell script:
     ```bash
-    python dev.py
+    ./start_server.sh
     ```
     Alternatively, you can run:
     ```bash
-    uvicorn split:app --reload --host ${HOST:-0.0.0.0} --port ${PORT:-8000}
+    python split.py
     ```
     The application will typically be available at `http://localhost:8000` (or the host/port specified in your `.env` file or command).
 
@@ -98,13 +98,13 @@ The application uses several environment variables for configuration. For local 
     -   **Build the Docker image:**
         ```bash
         ./docker-build.sh 
-        # Equivalent to: docker build -t load-split-service .
+        # Equivalent to: docker build -t ragwtf-text-splitter .
         ```
     -   **Run the Docker container:**
         Make sure you have a `.env` file in the project root, as the `docker-run.sh` script (or the command below) will pass it to the container.
         ```bash
         ./docker-run.sh
-        # Equivalent to: docker run -it --rm -p 8000:8000 --env-file .env load-split-service:latest
+        # Equivalent to: docker run -it --rm -p 8000:8000 --env-file .env ragwtf-text-splitter:latest
         ```
         The service inside the container will be accessible on port 8000 of your host machine.
 
