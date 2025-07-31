@@ -1,0 +1,2 @@
+This is a simple text file. It has multiple sentences. Used for testing the split endpoint.
+The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet.

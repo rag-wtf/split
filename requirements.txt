@@ -12,6 +12,8 @@ rapidocr-onnxruntime
 mangum
 # for local / self-host
 uvicorn
+python-dotenv # For .env file support, used by pydantic-settings
+pydantic-settings # For managing settings
 # for testclient
 #httpx
 #python-dotenv
