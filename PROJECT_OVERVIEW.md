@@ -2,11 +2,10 @@
 
 ## Main Functions and Purpose
 
-The project, named "load-split-embed," is an API endpoint designed to process documents. Its core functionalities are:
+The project, named "split" is an API endpoint designed to process documents. Its core functionalities are:
 
 1.  **Load:** Receive documents through an API endpoint.
 2.  **Split:** Process these documents by splitting them into manageable chunks.
-3.  **Embed (Implied):** While the embedding process itself isn't explicitly implemented in the current codebase, the project's name and the common use cases for Langchain suggest that the ultimate goal is to prepare these document chunks for embedding, likely for use in vector databases or similar AI applications.
 
 ## Technology Stack
 
@@ -51,7 +50,7 @@ Based on the repository structure and file contents, the project appears to have
 *   **Root Directory**: This is the primary location for most project files. It includes:
     *   **Dockerfiles**: `Dockerfile`, `Dockerfile-AwsLambda`, `Dockerfile-Text-Only` define environments for different deployment targets (general, AWS Lambda, text-only processing).
     *   **Configuration Files**: `.gitignore` (specifies intentionally untracked files), `LICENSE` (MIT License), `README.md` (project description and instructions), `serverless.yml` (for AWS Lambda deployment), `package.json` (likely for Node.js related tooling, possibly for Serverless Framework plugins or frontend components if any were planned), `requirements.txt` (Python dependencies for development), `deploy-requirements.txt` (Python dependencies for deployment).
-    *   **Main Application Scripts**: `split.py` (core FastAPI application logic), `dev.py` (local development server).
+    *   **Main Application Scripts**: `split.py` (core FastAPI application logic).
     *   **Validation Logic**: `validation_uploadfile.py` (middleware for validating file uploads).
     *   **Test Files**: `test.py`, `validation_uploadfile_test.py` (scripts for testing functionalities).
     *   **Helper Scripts**: Various shell scripts for Docker operations (e.g., `docker-build-lambda.sh`, `docker-push-ecr.sh`), `download.sh` (potentially for fetching dependencies or models), `start_server.sh` (likely for launching the application in a specific environment).
@@ -70,7 +69,6 @@ Based on the repository structure and file contents, the project appears to have
     *   Defines a `/split/config` endpoint to display current configuration settings (chunk size, overlap, etc.).
     *   Utilizes Pydantic models for request and response data validation and serialization.
     *   Includes the `Mangum` handler, making the FastAPI application compatible with AWS Lambda.
-*   **`dev.py`**: Serves as the entry point for local development. It imports the FastAPI app from `split.py` and uses `uvicorn` to run it.
 *   **`validation_uploadfile.py`**: Contains the `ValidateUploadFileMiddleware`. This custom middleware is integrated into the FastAPI application to validate incoming file uploads based on predefined criteria like maximum file size and allowed MIME types. This helps in rejecting invalid requests early in the pipeline.
 *   **`requirements.txt`**: Specifies the Python libraries required for the project, typically used for setting up development environments. It includes libraries for the web framework, document processing, and other utilities.
 *   **`deploy-requirements.txt`**: A specialized list of Python dependencies intended for the deployment environment (e.g., AWS Lambda). This is often a subset of `requirements.txt`, optimized for smaller deployment package sizes by excluding development-specific tools.
@@ -257,16 +255,12 @@ The project relies on several external libraries, primarily managed through `req
 
 The internal dependencies are straightforward:
 
-1.  **`dev.py`**:
-    *   Imports `app` (the FastAPI application instance) from `split.py`.
-    *   Purpose: To run the FastAPI application locally using `uvicorn`.
-
-2.  **`split.py`**:
+1.  **`split.py`**:
     *   Imports `ValidateUploadFileMiddleware` from `validation_uploadfile.py`.
     *   Imports various external libraries (FastAPI, Langchain components, Pydantic, etc.).
     *   Purpose: Defines the main FastAPI application, API endpoints (`/split`, `/split/config`), core document processing logic (loading, splitting), and integrates the validation middleware. This is the central module of the application.
 
-3.  **`validation_uploadfile.py`**:
+2.  **`validation_uploadfile.py`**:
     *   Imports from `starlette.middleware.base`, `starlette.requests`, `starlette.responses`, `starlette.types`.
     *   Imports `magic` and standard Python libraries (`os`, `json`).
     *   Purpose: Provides the `ValidateUploadFileMiddleware` to check uploaded files against size and MIME type constraints before they reach the main application logic. It has no internal project dependencies beyond what FastAPI/Starlette provides.
@@ -440,10 +434,10 @@ The internal dependencies are straightforward:
 
 This section outlines the conceptual function call graphs for key operations. It's based on the provided code structure and common interactions.
 
-### List of Main Functions/Methods (as identified in `split.py`, `validation_uploadfile.py`, `dev.py`)
+### List of Main Functions/Methods (as identified in `split.py`, `validation_uploadfile.py`)
 
 *   **`split.py`:**
-    *   `create_app()`: *(Correction: This function is not explicitly defined in `split.py`. The FastAPI `app` instance is created at the module level. `dev.py` imports this `app` instance directly. The `serverless.yml` also refers to `split.app`.)* The setup logic (middleware, routers) is applied directly to the `app` instance.
+    *   `create_app()`: *(Correction: This function is not explicitly defined in `split.py`. The FastAPI `app` instance is created at the module level. The `serverless.yml` also refers to `split.app`.)* The setup logic (middleware, routers) is applied directly to the `app` instance.
     *   `get_config()`: Endpoint handler for `GET /split/config`.
     *   `load_split()`: Endpoint handler for `POST /split`.
     *   `is_gz_file(file_path: str) -> bool`: Helper to check if a file is GZip compressed by its magic number.
@@ -456,13 +450,10 @@ This section outlines the conceptual function call graphs for key operations. It
 *   **`validation_uploadfile.py`:**
     *   `ValidateUploadFileMiddleware.dispatch(request: Request, call_next: RequestResponseEndpoint) -> Response`: The core logic of the validation middleware.
 
-*   **`dev.py`:**
-    *   Implicit `if __name__ == "__main__":` block: Calls `uvicorn.run(app, ...)` using the `app` imported from `split.py`.
-
 ### Visualization of Function Call Relationships (Textual Description)
 
-*   **Local Development Startup (`python dev.py`):**
-    1.  `dev.py` (implicit main)
+*   **Local Development Startup (`python split.py`):**
+    1.  `split.py` (implicit main)
     2.  `-> uvicorn.run(app, host="0.0.0.0", port=8000)` (using `app` from `split.py`)
         *   *(FastAPI app initialization in `split.py` happens on import:)*
         *   `app = FastAPI()`
