@@ -1,6 +1,6 @@
-# load-split
+# ✂️ split
 
-## Project Purpose and Architecture
+## 🎯 Project Purpose and ⚙️ Architecture
 
 ### Purpose
 
@@ -11,43 +11,45 @@ This project provides an API endpoint for loading various document types (e.g., 
 The service is built as a Python [FastAPI](https://fastapi.tiangolo.com/) application. It leverages the [Unstructured](https://unstructured.io/) library for robust document parsing and content extraction, and [Langchain](https://www.langchain.com/) for its text splitting capabilities (specifically `RecursiveCharacterTextSplitter`).
 
 The application is designed to be:
--   **Containerized:** Using Docker for consistent environments and deployment.
--   **Serverless-ready:** Deployable as an AWS Lambda function, managed via the Serverless Framework.
 
-## Environment Variables
+  - **📦 Containerized:** Using Docker for consistent environments and deployment.
+  - **☁️ Serverless-ready:** Deployable as an AWS Lambda function, managed via the Serverless Framework.
 
-The application uses several environment variables for configuration. For local development, these can be set in a `.env` file.
+-----
 
-| Variable                 | Purpose                                                                                                | Default (in code if not set) / Example Value | File(s) Used In        |
-| ------------------------ | ------------------------------------------------------------------------------------------------------ | -------------------------------------------- | ---------------------- |
-| `HOST`                   | Host address for the Uvicorn server in local development.                                              | `0.0.0.0`                                    | `dev.py`               |
-| `PORT`                   | Port for the Uvicorn server in local development.                                                      | `8000`                                       | `dev.py`               |
-| `DELETE_TEMP_FILE`       | If `True`, temporary files created during processing will be deleted. Recommended: `True`.             | `False` (if env var is empty/not set)        | `split.py`             |
-| `NLTK_DATA`              | Path to NLTK data directory. Needed for `nltk` tokenizers (e.g., `punkt`) used by `unstructured`.       | `./nltk_data` (example)                      | `split.py`             |
-| `MAX_FILE_SIZE_IN_MB`    | Maximum allowed file size for uploads in Megabytes.                                                    | `10.0`                                       | `split.py`             |
-| `SUPPORTED_FILE_TYPES`   | Comma-separated string of allowed MIME types for uploaded files.                                       | See `.env.example` for a common list         | `split.py`             |
-| `CHUNK_SIZE`             | Target size for text chunks in characters.                                                             | `500`                                        | `split.py`, `serverless.yml` |
-| `CHUNK_OVERLAP`          | Number of characters to overlap between consecutive chunks.                                            | `50`                                         | `split.py`, `serverless.yml` |
-| `RUNTIME`                | Used to indicate if running in a specific environment, e.g., "aws-lambda" for AWS Lambda context.      | Not set by default                           | `split.py`             |
-| `HF_HOME`                | Path to HuggingFace cache directory. Relevant if `unstructured` uses models from HuggingFace Hub.        | `/tmp/hf_home` (in `serverless.yml`)         | `serverless.yml`       |
+## 🔑 Environment Variables
 
-## Setup and Local Development
+The application uses several environment variables for configuration, managed through a `.env` file and a `config.py` file.
 
-### Prerequisites
+| Variable | Purpose | Default (in `config.py`) | File(s) Used In |
+| --- | --- | --- | --- |
+| `DELETE_TEMP_FILE` | If `1`, temporary files created during processing will be deleted. | `True` | `config.py`, `split.py` |
+| `NLTK_DATA` | Path to NLTK data directory, needed for tokenizers used by `unstructured`. | `/tmp/nltk_data` | `config.py`, `split.py` |
+| `MAX_FILE_SIZE_IN_MB` | Maximum allowed file size for uploads in Megabytes. | `10.0` | `config.py`, `split.py` |
+| `SUPPORTED_FILE_TYPES` | Comma-separated string of allowed MIME types for uploaded files. | See `config.py` for a comprehensive list | `config.py`, `split.py` |
+| `CHUNK_SIZE` | Target size for text chunks in characters. | `500` | `config.py`, `split.py` |
+| `CHUNK_OVERLAP` | Number of characters to overlap between consecutive chunks. | `20` | `config.py`, `split.py` |
+| `HOST` | Host address for the Uvicorn server in local development. | `0.0.0.0` | `config.py` |
+| `PORT` | Port for the Uvicorn server in local development. | `8000` | `config.py` |
+| `RUNTIME` | Used to indicate the running environment, e.g., "aws-lambda". | `None` | `config.py`, `split.py` |
+| `HF_HOME` | Path to HuggingFace cache directory. Relevant if `unstructured` uses models from HuggingFace Hub. | `/tmp/hf_home` | `config.py` |
 
--   Python 3.11
--   Docker (for containerized development/deployment)
--   Access to a terminal or command prompt.
+-----
 
-### Steps
+## 💻 Setup and Local Development
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd <repository-directory>
-    ```
+### ✅ Prerequisites
+
+  - Python 3.11+
+  - Docker
+  - Node.js (for Serverless Framework)
+
+### 🛠️ Steps
+
+1.  **Clone the repository.**
 
 2.  **Create a virtual environment and install dependencies:**
+
     ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -55,157 +57,140 @@ The application uses several environment variables for configuration. For local 
     ```
 
 3.  **NLTK Data:**
-    The `unstructured` library, a core dependency, often relies on `nltk` for text processing, which in turn requires specific data packages (like the `punkt` tokenizer and `averaged_perceptron_tagger`). The `NLTK_DATA` environment variable tells `nltk` where to look for these packages.
-    You might need to download these manually or via a script if they are not present in your `NLTK_DATA` directory:
-    ```python
-    import nltk
-    nltk.download('punkt', download_dir='./nltk_data')
-    nltk.download('averaged_perceptron_tagger', download_dir='./nltk_data')
-    # Ensure NLTK_DATA environment variable is set to ./nltk_data or your chosen path.
-    ```
-    It's recommended to download these into a local directory (e.g., `nltk_data` in the project root) and point the `NLTK_DATA` environment variable to it.
+    The `unstructured` library requires NLTK data packages. The application is configured to look for them in the path specified by the `NLTK_DATA` environment variable.
 
-4.  **Create `.env` file:**
-    Create a file named `.env` in the project root for local environment variables. You can copy `.env.example` (see below) to `.env` and modify as needed.
+4.  **Create a `.env` file:**
+    Copy the contents of the example below into a `.env` file in the project root to configure the application for local development.
 
-    **.env.example:**
     ```env
     HOST=0.0.0.0
     PORT=8000
-    DELETE_TEMP_FILE=True
-    NLTK_DATA=./nltk_data # Or a suitable path for your nltk data
+    DELETE_TEMP_FILE=1
+    NLTK_DATA=/tmp/nltk_data
     MAX_FILE_SIZE_IN_MB=10
     SUPPORTED_FILE_TYPES=text/plain,application/pdf,text/html,text/markdown,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/epub+zip,message/rfc822,application/gzip
     CHUNK_SIZE=500
-    CHUNK_OVERLAP=50
-    # RUNTIME=local # Optional: can be used to signal local runtime if needed
-    # HF_HOME=./hf_cache # Optional: if you want to control HuggingFace cache location locally
+    CHUNK_OVERLAP=20
+    HF_HOME=/tmp/hf_home
     ```
 
-5.  **Running the application locally (Uvicorn):**
-    You can run the FastAPI application directly using the following shell script:
+5.  **Running the application locally:**
+    Use the provided shell script to start the server with Uvicorn:
+
     ```bash
     ./start_server.sh
     ```
-    Alternatively, you can run:
+
+    Alternatively, run the `split.py` script directly:
+
     ```bash
     python split.py
     ```
-    The application will typically be available at `http://localhost:8000` (or the host/port specified in your `.env` file or command).
 
-6.  **Running with Docker (local):**
-    The repository includes helper scripts for Docker operations.
-    -   **Build the Docker image:**
+6.  **Running with Docker:**
+
+      - **Build the Docker image:**
         ```bash
-        ./docker-build.sh 
-        # Equivalent to: docker build -t ragwtf-text-splitter .
+        ./docker-build.sh
         ```
-    -   **Run the Docker container:**
-        Make sure you have a `.env` file in the project root, as the `docker-run.sh` script (or the command below) will pass it to the container.
+      - **Run the Docker container:**
         ```bash
         ./docker-run.sh
-        # Equivalent to: docker run -it --rm -p 8000:8000 --env-file .env ragwtf-text-splitter:latest
         ```
-        The service inside the container will be accessible on port 8000 of your host machine.
 
-## API Endpoints
+    The `docker-compose.yaml` file is also available for running the service with Docker Compose.
 
-The service provides the following API endpoints:
+-----
 
-### 1. `POST /split`
+## 🔗 API Endpoints
 
-Uploads a document, splits its textual content into chunks, and returns the chunks.
+### 1\. `POST /split`
 
--   **Request:**
-    -   Method: `POST`
-    -   Content-Type: `multipart/form-data`
-    -   Body: Must include a `file` field containing the document to process.
--   **Query Parameters:**
-    -   `q_chunk_size` (integer, optional): Desired chunk size in characters. Defaults to the value from the `CHUNK_SIZE` environment variable.
-    -   `q_chunk_overlap` (integer, optional): Desired chunk overlap in characters. Defaults to the value from the `CHUNK_OVERLAP` environment variable.
--   **Response (Success: 200 OK):**
-    A JSON object with the following structure (based on Pydantic models `DocumentResponse` and `Chunk` in `split.py`):
+Uploads a document, splits its textual content, and returns the chunks.
+
+  - **Request:**
+      - Method: `POST`
+      - Content-Type: `multipart/form-data`
+      - Body: Must include a `file` field containing the document.
+  - **Query Parameters:**
+      - `q_chunk_size` (integer, optional): Desired chunk size. Defaults to `CHUNK_SIZE`.
+      - `q_chunk_overlap` (integer, optional): Desired chunk overlap. Defaults to `CHUNK_OVERLAP`.
+  - **Response (200 OK):**
+    A JSON object with the following structure:
     ```json
     {
-      "content": null, // Original content is not returned by default
-      "mime_type": "string", // Detected MIME type of the uploaded file
+      "content": "string or null",
+      "mime_type": "string",
       "items": [
         {
-          "content": "string", // Text content of a specific chunk
+          "content": "string",
           "metadata": {
-            "source": "string", // Path to the temporary file used for processing
-            "id": "string",     // MD5 hash of the chunk content
-            // ... other metadata extracted by Unstructured (e.g., page_number, filename)
+            "source": "string",
+            "id": "string",
+            // ... other metadata
           }
         }
-        // ... more items (chunks)
       ]
     }
     ```
--   **`curl` Example:**
+  - **`curl` Example:**
     ```bash
     curl -X POST -F "file=@/path/to/your/document.pdf" "http://localhost:8000/split?q_chunk_size=1000&q_chunk_overlap=100"
     ```
 
-### 2. `GET /split/config`
+### 2\. `GET /split/config`
 
 Returns the current operational configuration of the service.
 
--   **Response (Success: 200 OK):**
-    A JSON object detailing the service's settings (based on Pydantic model `SplitConfig` in `split.py`):
+  - **Response (200 OK):**
+    A JSON object detailing the service's settings:
     ```json
     {
       "delete_temp_file": true,
-      "nltk_data": "/path/to/nltk_data",
+      "nltk_data": "/tmp/nltk_data",
       "max_file_size_in_mb": 10.0,
       "supported_file_types": [
         "text/plain",
         "application/pdf",
-        // ... other configured MIME types
+        // ...
       ],
       "chunk_size": 500,
       "chunk_overlap": 50
     }
     ```
--   **`curl` Example:**
+  - **`curl` Example:**
     ```bash
     curl http://localhost:8000/split/config
     ```
 
-## Deployment (AWS Lambda)
+-----
 
-This service is designed for serverless deployment on AWS Lambda using the Serverless Framework.
+## 🚀 Deployment
 
--   **Configuration:** The `serverless.yml` file in the project root defines the AWS Lambda function, API Gateway trigger, environment variables, and other deployment settings.
--   **Container Image:** The `Dockerfile-AwsLambda` is used to build the Docker container image that will be deployed to AWS Lambda.
--   **Deployment Steps (High-Level):**
-    1.  **Configure AWS Credentials:** Ensure your AWS CLI is configured with credentials that have permissions to deploy Lambda functions, API Gateway, ECR (for container images), etc.
-    2.  **Install Serverless Framework:** If you haven't already, install the Serverless Framework: `npm install -g serverless`.
-    3.  **Deploy:** Navigate to the project root directory and run:
-        ```bash
-        serverless deploy
-        ```
-        This command will package the application, build the Docker image using `Dockerfile-AwsLambda`, push it to Amazon ECR, and deploy the Lambda function and API Gateway endpoint as defined in `serverless.yml`.
+### ☁️ AWS Lambda
 
-Refer to the Serverless Framework documentation and AWS documentation for more detailed deployment guides.
+The service is designed for serverless deployment on AWS Lambda using the Serverless Framework. The `serverless.yml` file configures the Lambda function, API Gateway trigger, and environment variables. The `Dockerfile-AwsLambda` is used to build the container image for deployment.
 
-## Dependency Management
+The `.github/workflows/dev.yml` file contains a GitHub Actions workflow for deploying to a development environment on AWS.
 
-This project uses several `requirements.txt` files to manage Python dependencies for different environments and purposes:
+### 🖥️ VPS
 
-*   **`requirements.txt`**: Used for local development and running tests. It includes all production dependencies from `deploy-requirements.txt` plus additional tools needed for development (e.g., `pytest`, `httpx`).
-*   **`deploy-requirements.txt`**: Specifies the exact Python dependencies required for production deployments, particularly for the AWS Lambda environment (used by `Dockerfile-AwsLambda`). This list is optimized for running all features of the service.
-*   **`requirements-text-only.txt`**: A subset of dependencies for a minimal, text-only version of the service (used by `Dockerfile-Text-Only`). This helps reduce package size if only plain text processing is needed.
+A GitHub Actions workflow is also provided for deploying the application to a Virtual Private Server (VPS) in `.github/workflows/deploy-vps.yml`.
 
-When adding or updating core dependencies, ensure consistency across relevant files, primarily `deploy-requirements.txt` and then `requirements.txt`. For the text-only version, evaluate if the dependency is applicable.
+-----
 
-### Vulnerability Scanning and Updates
+## 📦 Dependency Management
 
-To maintain the security and stability of the application, it's important to manage dependencies proactively:
+The project uses multiple `requirements.txt` files for different environments:
 
-*   **Regular Reviews:** Periodically review dependencies to ensure they are necessary and up-to-date.
-*   **Security Bulletins:** Monitor security advisories for key libraries like FastAPI, Langchain, Unstructured, and their underlying parsing libraries.
-*   **Automated Scanning:** Implement automated vulnerability scanning. Recommended tools include:
-    *   **GitHub Dependabot:** Enable for automated alerts and pull requests for security updates (if the project is hosted on GitHub).
-    *   Tools like **Snyk** or **Trivy** can be integrated into CI/CD pipelines for deeper scans of dependencies and Docker images.
-*   **Update Policy:** Apply updates, especially security patches, promptly after thorough testing in a non-production environment.
+  * **`requirements.txt`**: For local development and testing.
+  * **`deploy-requirements.txt`**: Production dependencies for the full-featured AWS Lambda deployment.
+  * **`requirements-text-only.txt`**: A minimal set of dependencies for a text-only version of the service.
+
+It is important to regularly review and update dependencies and use tools like GitHub Dependabot, Snyk, or Trivy for vulnerability scanning.
+
+-----
+
+## 📜 License
+
+This project is licensed under the MIT License.
