@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  split:
+    container_name: split
+    image: ghcr.io/rag-wtf/text-splitter-linux-amd64:latest
+    restart: unless-stopped
+    ports:
+      - "10001:8000"    
+    environment:
+      - CHUNK_SIZE=${CHUNK_SIZE:-500}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
+      - SUPPORTED_FILE_TYPES=${SUPPORTED_FILE_TYPES:-text/plain,application/pdf,text/markdown,application/msword}
+      - MAX_FILE_SIZE_IN_MB=${MAX_FILE_SIZE_IN_MB:-1}
+      - NLTK_DATA=${NLTK_DATA:-/tmp/nltk_data}
+      - DELETE_TEMP_FILE=${DELETE_TEMP_FILE:-1}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/split/config"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - /tmp:/tmp
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 1024M }
+        reservations: { cpus: '0.5', memory: 512M }
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
