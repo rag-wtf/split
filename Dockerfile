@@ -1,6 +1,9 @@
 FROM python:3.12-slim
 
 COPY split.py ./
+COPY config.py ./
+COPY models.py ./
+COPY core_processing.py ./
 COPY validation_uploadfile.py ./
 COPY start_server.sh ./
 COPY requirements.txt ./
