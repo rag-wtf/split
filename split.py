@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from validation_uploadfile import ValidateUploadFileMiddleware
 
+# Import FileTypeName if it's defined in validation_uploadfile or define it here
+from validation_uploadfile import FileTypeName
+
 # Langchain imports are no longer directly used here if logic is in core_processing
 # from langchain_unstructured import UnstructuredLoader
 # from langchain_community.document_loaders import PyMuPDFLoader # Example if it was used
@@ -22,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 # Removed: hashlib, gzip, magic (moved to core_processing.py)
 
-from .config import settings
-from .models import DocumentItem, Document, SplitConfig # Import Pydantic models
-from .core_processing import load, split, DocumentProcessingError # Import core functions and custom exception
+from config import settings
+from models import DocumentItem, Document, SplitConfig # Import Pydantic models
+from core_processing import load, split, DocumentProcessingError # Import core functions and custom exception
 
 # Set the nltk.data.path with environment variable
 if settings.nltk_data and settings.nltk_data not in nltk.data.path:
@@ -58,8 +61,8 @@ def create_app():
         app_paths=["/split"], # Changed to list as per task
         # 1000000 is 1MB for storage, 1048576 is 1MB for memory
         # REF:
-        max_size=settings.max_file_size_in_mb * 1000000,
-        file_types=settings.supported_file_types
+        max_size=int(settings.max_file_size_in_mb * 1000000),
+        file_types=[FileTypeName(ft) for ft in settings.supported_file_types.split(",")]
     )
 
     app.add_middleware(GZipMiddleware, minimum_size=1000) # Default minimum_size for Gzip is 1KB
@@ -96,7 +99,7 @@ async def get_config():
         delete_temp_file=settings.delete_temp_file,
         nltk_data=settings.nltk_data,
         max_file_size_in_mb=settings.max_file_size_in_mb,
-        supported_file_types=settings.supported_file_types,
+        supported_file_types=settings.supported_file_types.split(","),
         chunk_size=settings.chunk_size,
         chunk_overlap=settings.chunk_overlap
     )

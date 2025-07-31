@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from enum import Enum
 
 from starlette.types import ASGIApp
@@ -7,6 +7,7 @@ from starlette.responses import PlainTextResponse, Response
 import logging # For logging
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette import status
+from starlette.datastructures import UploadFile
 
 class FileTypeName(str, Enum):
     """
@@ -17,14 +18,23 @@ class FileTypeName(str, Enum):
     to define which file types are permissible.
     """
     JPEG = "image/jpeg"
-    JPG = "image/jpeg"
+    JPG = "image/jpg"
     PNG = "image/png"
     GIF = "image/gif"
     WEBP = "image/webp"
     PDF = "application/pdf"
     ZIP = "application/zip"
     TXT = "text/plain"
-
+    HTML = "text/html"
+    MD = "text/markdown"
+    PPT = "application/vnd.ms-powerpoint"
+    ODP = "application/vnd.openxmlformats-officedocument.presentationml.presentation" 
+    DOC = "application/msword"
+    ODT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    EPUB = "application/epub+zip"
+    EML = "message/rfc822"
+    GZIP = "application/gzip"
+    
 logger = logging.getLogger(__name__)
 
 class ValidateUploadFileMiddleware(BaseHTTPMiddleware):
@@ -47,9 +57,9 @@ class ValidateUploadFileMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        app_paths: List[str] = None,
+        app_paths: Optional[List[str]] = None,
         max_size: int = 16 * 1024 * 1024,  # 16MB in bytes
-        file_types: List[FileTypeName] = None
+        file_types: Optional[List[FileTypeName]] = None
     ) -> None:
         super().__init__(app)
         self.app_paths = app_paths or []
@@ -93,9 +103,8 @@ class ValidateUploadFileMiddleware(BaseHTTPMiddleware):
                 all_files_valid = True
                 # Iterate through all form items to find UploadFile instances
                 for key in form:
-                    # FormData.getlist(key) ensures we get a list, even if it's one item
                     for item_in_list in form.getlist(key):
-                        if hasattr(item_in_list, 'content_type'): # It's an UploadFile object
+                        if isinstance(item_in_list, UploadFile): # It's an UploadFile object
                             upload_file_obj = item_in_list 
                             content_type = upload_file_obj.content_type
                             logger.debug(f"Validating file: {upload_file_obj.filename}, content_type: {content_type}")

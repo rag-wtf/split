@@ -7,21 +7,15 @@ import magic # For python-magic
 from typing import List, Tuple
 
 # Langchain and Unstructured related imports
+from langchain_core.documents import Document
 from langchain_unstructured import UnstructuredLoader
 from unstructured.cleaners.core import clean_extra_whitespace
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import BaseModel # To be used as a type hint for Langchain Document
 
 # Project-specific imports
-from .config import settings
-from .models import DocumentItem
-
-# Note: The Langchain Document class is typically imported from langchain_core.documents
-# However, the existing code in split.py uses `from pydantic import BaseModel`
-# and then type hints Langchain documents as `BaseModel`. We'll follow that pattern
-# for consistency for now, but ideally, it should be `from langchain_core.documents import Document as LangchainDocument`
-# and used as `LangchainDocument`. For this refactoring, I'll stick to `BaseModel` as the type hint
-# where Langchain documents are expected.
+from config import settings
+from models import DocumentItem
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +52,7 @@ def get_mime_type(file_path: str) -> str:
     return mime_type
 
 
-def load_by_unstructured(file_path: str) -> List[BaseModel]:
+def load_by_unstructured(file_path: str) -> List[Document]:
     """
     Loads a document using UnstructuredLoader with specific post-processors
     and a basic chunking strategy.
@@ -90,7 +84,7 @@ def load_by_unstructured(file_path: str) -> List[BaseModel]:
         raise DocumentProcessingError(f"Failed to process document with UnstructuredLoader: {str(e)}")
 
 
-def load(uploaded_file_path: str, settings_obj) -> Tuple[List[BaseModel], str]:
+def load(uploaded_file_path: str, settings_obj) -> Tuple[List[Document], str]:
     """
     Loads a document from a temporary file, handling GZip decompression if necessary,
     and processes it using UnstructuredLoader.
@@ -142,7 +136,7 @@ def load(uploaded_file_path: str, settings_obj) -> Tuple[List[BaseModel], str]:
         return docs, mime_type
 
 
-def get_doc_id(doc: BaseModel) -> str:
+def get_doc_id(doc: Document) -> str:
     """
     Generates a unique 12-character ID for a document based on an MD5 hash
     of its 'source' metadata.
@@ -165,7 +159,7 @@ def get_doc_id(doc: BaseModel) -> str:
     return uid
 
 
-def split(doc: BaseModel, q_chunk_size: int, q_chunk_overlap: int) -> List[DocumentItem]:
+def split(doc: Document, q_chunk_size: int, q_chunk_overlap: int) -> List[DocumentItem]:
     """
     Splits a Langchain Document into smaller DocumentItem chunks using
     RecursiveCharacterTextSplitter.
